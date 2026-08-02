@@ -109,7 +109,6 @@ const MathQuill = (() => {
             ctrlr.createTextarea()
 
             const contents = domFrag(el).addClass(classNames).children().detach()
-
             root.setDOM(
                 domFrag(h('span', { class: 'mq-root-block', 'aria-hidden': true }))
                     .appendTo(el)
@@ -423,8 +422,6 @@ const MathQuill = (() => {
         ; (MQ as any).EditableField.prototype = EditableField.prototype
     return MQ as any
 })()
-
-
 
 export {
     MathQuill

@@ -3,7 +3,6 @@
 
 <head>
     <title>MathQuill Quickstart</title>
-    <link rel="stylesheet" type="text/css" href="build/mathquill.css" />
 </head>
 
 <body>
@@ -17,20 +16,20 @@
         <a href="http://docs.mathquill.com/en/latest/Getting_Started/">MathQuill&rsquo;s Getting Started Guide</a>
     </p>
 
-    <script src="build/mathquill.js"></script>
-    <script>
+    <script type="module">
+        import MathQuill from 'mathquill'
+        import 'mathquill/mathquill.css'
+        
         var staticMathSpan = document.getElementById('static-math')
         var mathFieldSpan = document.getElementById('math-field')
         var latexSpan = document.getElementById('latex')
 
-        var MQ = MathQuill.getInterface(3); // keeps the API stable
-
         // easily create static or editable math from a DOM element by calling the
         // appropriate constructor: http://docs.mathquill.com/en/latest/Api_Methods/
-        MQ.StaticMath(staticMathSpan)
+        MathQuill.StaticMath(staticMathSpan)
 
         // you may pass in an options object:
-        var mathField = MQ.MathField(mathFieldSpan, {
+        var mathField = MathQuill.MathField(mathFieldSpan, {
             spaceBehavesLikeTab: true, // an example config option, for more see:
             //   http://docs.mathquill.com/en/latest/Config/
             handlers: {

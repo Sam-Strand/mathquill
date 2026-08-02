@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mathquill/mathquill.git"
+    "url": "https://github.com/Sam-Strand/mathquill.git"
   },
   "type": "module",
   "exports": {
@@ -28,15 +28,10 @@
     }
   },
   "devDependencies": {
-    "@types/jquery": "^4.0.1",
     "@types/mocha": "^5.2.7",
-    "dependency-cruiser": "^18.1.0",
-    "lint-staged": "^12.3.1",
     "mocha": ">=2.4.1",
-    "prettier": "^2.5.1",
     "sass": "^1.101.0",
     "typescript": "^6.0.3",
-    "uglify-js": "2.x",
     "vite": "^8.1.0",
     "vite-plugin-dts": "^5.0.2"
   }

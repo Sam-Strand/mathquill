@@ -208,17 +208,23 @@ class Controller_latex extends Controller_keystroke {
 
         return true
     }
+
     renderLatexMathFromScratch(latex: unknown) {
         var root = this.root,
             cursor = this.cursor
         var all = Parser.all
         var eof = Parser.eof
-
-        var block = latexMathParser
-            .skip(eof)
-            .or(all.result<false>(false))
-            .parse(latex)
-
+        console.log('=== DEBUG PARSER ===');
+        console.log('latexMathParser type:', typeof latexMathParser);
+        console.log('latexMathParser._:', latexMathParser._); // функция-парсер
+        console.log('Trying parse "x":', latexMathParser.parse('x'));
+        console.log('Trying parse "1":', latexMathParser.parse('1'));
+        console.log('Trying parse "x^2":', latexMathParser.parse('x^2'));
+        console.log('Trying parse "\\frac":', latexMathParser.parse('\\frac'));
+        console.log('Trying parse your latex:', latexMathParser.parse(latex));
+        const latexSkip = latexMathParser.skip(eof)
+        const latexOr = latexSkip.or(all.result<false>(false))
+        var block = latexOr.parse(latex)
         root.setEnds({ [L]: 0, [R]: 0 })
 
         if (block) {
@@ -234,6 +240,7 @@ class Controller_latex extends Controller_keystroke {
             root.domFrag().empty()
         }
     }
+
     renderLatexMath(latex: unknown) {
         var cursor = this.cursor
         var root = this.root
@@ -241,12 +248,13 @@ class Controller_latex extends Controller_keystroke {
         cursor.clearSelection()
         var oldLatex = this.exportLatex()
         if (!root.getEnd(L) || !root.getEnd(R) || oldLatex !== latex) {
-            this.updateLatexMathEfficiently(latex, oldLatex) ||
-                this.renderLatexMathFromScratch(latex)
+            const update =  this.updateLatexMathEfficiently(latex, oldLatex)
+            update || this.renderLatexMathFromScratch(latex)
             this.updateMathspeak()
         }
         cursor.insAtRightEnd(root)
     }
+
     renderLatexText(latex: string) {
         var root = this.root,
             cursor = this.cursor

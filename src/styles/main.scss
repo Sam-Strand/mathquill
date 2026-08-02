@@ -1,0 +1,719 @@
+/*
+ * MathQuill v0.10.1, by Han, Jeanine, and Mary
+ * http://mathquill.com | maintainers@mathquill.com
+ *
+ * This Source Code Form is subject to the terms of the
+ * Mozilla Public License, v. 2.0. If a copy of the MPL
+ * was not distributed with this file, You can obtain
+ * one at http://mozilla.org/MPL/2.0/.
+ */
+
+// ==========================================================================
+// Variables
+// ==========================================================================
+
+// Colors
+$mq-color-border: gray !default;
+$mq-color-border-focused: #709ac0 !default;
+$mq-color-shadow-focused: #8bd !default;
+$mq-color-shadow-inset-focused: #6ae !default;
+$mq-color-selection: #b4d5fe !default;
+$mq-color-selection-blur: #d4d4d4 !default;
+$mq-color-empty-bg: rgba(0, 0, 0, 0.2) !default;
+$mq-color-text: black !default;
+$mq-color-cursor: currentColor !default;
+$mq-color-ghost: rgba(0, 0, 0, 0.2) !default;
+$mq-color-hasCursor-shadow: darkgray !default;
+$mq-color-border-active: ActiveBorder !default;
+
+// Fonts
+$mq-font-symbola: Symbola !default;
+$mq-font-serif: "Times New Roman", $mq-font-symbola, serif !default;
+$mq-font-sans-serif: sans-serif, $mq-font-symbola, serif !default;
+$mq-font-monospace: monospace, $mq-font-symbola, serif !default;
+$mq-font-courier: "Courier New", monospace !default;
+
+// Sizes
+$mq-font-size-base: 115% !default;
+$mq-font-size-large: 200% !default;
+$mq-font-size-smaller: 90% !default;
+$mq-font-size-small: 80% !default;
+$mq-font-size-tiny: 70% !default;
+$mq-font-size-micro: 0.5em !default;
+
+// Spacing
+$mq-spacing-padding: 2px !default;
+$mq-spacing-padding-small: 0.1em !default;
+$mq-spacing-padding-medium: 0.2em !default;
+$mq-spacing-margin-small: 0.1em !default;
+$mq-spacing-margin-medium: 0.2em !default;
+$mq-spacing-margin-large: 0.35em !default;
+$mq-spacing-margin-negative: -0.01em !default;
+$mq-spacing-margin-negative-medium: -0.1em !default;
+$mq-spacing-margin-negative-large: -0.35em !default;
+$mq-spacing-margin-vertical: 1px !default;
+
+// Borders
+$mq-border-width: 1px !default;
+$mq-border-color: $mq-color-text !default;
+$mq-border-style: solid !default;
+
+// ==========================================================================
+// A11y / Hidden elements
+// ==========================================================================
+
+.mq-aria-alert {
+    position: absolute;
+    left: -1000px;
+    top: -1000px;
+    width: 0px;
+    height: 0px;
+    text-align: left;
+    overflow: hidden;
+}
+
+.mq-mathspeak {
+    position: absolute;
+    left: -1000px;
+    top: -1000px;
+    width: 0px;
+    height: 0px;
+    text-align: left;
+    overflow: hidden;
+}
+
+// ==========================================================================
+// Font-face
+// ==========================================================================
+
+@font-face {
+    font-family: $mq-font-symbola;
+    src: url(fonts/Symbola.eot);
+    src: local("Symbola Regular"), local("Symbola"),
+        url(fonts/Symbola.woff2) format("woff2"),
+        url(fonts/Symbola.woff) format("woff"),
+        url(fonts/Symbola.ttf) format("truetype"),
+        url(fonts/Symbola.svg#Symbola) format("svg");
+}
+
+// ==========================================================================
+// Editable field
+// ==========================================================================
+
+.mq-editable-field {
+    display: -moz-inline-box;
+    display: inline-block;
+
+    .mq-cursor {
+        border-left: $mq-border-width solid $mq-color-cursor;
+        margin-left: -$mq-border-width;
+        position: relative;
+        z-index: 1;
+        padding: 0;
+        display: -moz-inline-box;
+        display: inline-block;
+
+        &.mq-blink {
+            visibility: hidden;
+        }
+    }
+}
+
+.mq-editable-field,
+.mq-math-mode .mq-editable-field {
+    border: $mq-border-width solid $mq-color-border;
+}
+
+.mq-editable-field.mq-focused,
+.mq-math-mode .mq-editable-field.mq-focused {
+    -webkit-box-shadow: $mq-color-shadow-focused 0 0 1px 2px,
+        inset $mq-color-shadow-inset-focused 0 0 2px 0;
+    -moz-box-shadow: $mq-color-shadow-focused 0 0 1px 2px,
+        inset $mq-color-shadow-inset-focused 0 0 2px 0;
+    box-shadow: $mq-color-shadow-focused 0 0 1px 2px,
+        inset $mq-color-shadow-inset-focused 0 0 2px 0;
+    border-color: $mq-color-border-focused;
+}
+
+.mq-math-mode .mq-editable-field {
+    margin: $mq-spacing-margin-vertical;
+}
+
+.mq-editable-field .mq-latex-command-input {
+    color: inherit;
+    font-family: $mq-font-courier;
+    border: $mq-border-width solid $mq-color-border;
+    padding-right: $mq-spacing-margin-vertical;
+    margin-right: $mq-spacing-margin-vertical;
+    margin-left: $mq-spacing-padding;
+
+    &.mq-empty {
+        background: transparent;
+    }
+
+    &.mq-hasCursor {
+        border-color: $mq-color-border-active;
+    }
+}
+
+.mq-editable-field.mq-empty:after,
+.mq-editable-field.mq-text-mode:after,
+.mq-math-mode .mq-empty:after {
+    visibility: hidden;
+    content: "c";
+}
+
+.mq-editable-field .mq-cursor:only-child:after,
+.mq-editable-field .mq-textarea + .mq-cursor:last-child:after {
+    visibility: hidden;
+    content: "c";
+}
+
+.mq-editable-field .mq-text-mode .mq-cursor:only-child:after {
+    content: "";
+}
+
+.mq-editable-field.mq-text-mode {
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+// ==========================================================================
+// Root block
+// ==========================================================================
+
+.mq-root-block,
+.mq-math-mode .mq-root-block {
+    display: -moz-inline-box;
+    display: inline-block;
+    width: 100%;
+    padding: $mq-spacing-padding;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    white-space: nowrap;
+    overflow: hidden;
+    vertical-align: middle;
+
+    .mq-digit {
+        margin-left: 0.009em;
+        margin-right: 0.009em;
+    }
+
+    .mq-group-start {
+        margin-left: 0.11em;
+        margin-right: $mq-spacing-margin-negative;
+    }
+
+    .mq-group-other {
+        margin-left: $mq-spacing-margin-negative;
+        margin-right: $mq-spacing-margin-negative;
+    }
+
+    .mq-group-leading-1,
+    .mq-group-leading-2 {
+        margin-left: 0;
+        margin-right: $mq-spacing-margin-negative;
+    }
+
+    .mq-group-leading-3 {
+        margin-left: 0.036em;
+        margin-right: $mq-spacing-margin-negative;
+    }
+}
+
+.mq-root-block.mq-suppress-grouping,
+.mq-math-mode .mq-root-block.mq-suppress-grouping {
+    .mq-group-start,
+    .mq-group-other,
+    .mq-group-leading-1,
+    .mq-group-leading-2,
+    .mq-group-leading-3 {
+        margin-left: 0.009em;
+        margin-right: 0.009em;
+    }
+}
+
+// ==========================================================================
+// Math mode
+// ==========================================================================
+
+.mq-math-mode {
+    font-variant: normal;
+    font-weight: normal;
+    font-style: normal;
+    font-size: $mq-font-size-base;
+    line-height: 1;
+    display: -moz-inline-box;
+    display: inline-block;
+
+    .mq-non-leaf,
+    .mq-scaled {
+        display: -moz-inline-box;
+        display: inline-block;
+    }
+
+    var,
+    .mq-text-mode,
+    .mq-nonSymbola {
+        font-family: $mq-font-serif;
+        line-height: 0.9;
+    }
+
+    svg {
+        fill: $mq-color-cursor;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    * {
+        font-size: inherit;
+        line-height: inherit;
+        margin: 0;
+        padding: 0;
+        border-color: $mq-color-text;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        box-sizing: border-box;
+    }
+
+    .mq-empty {
+        background: $mq-color-empty-bg;
+
+        &.mq-root-block {
+            background: transparent;
+        }
+
+        &.mq-quiet-delimiter {
+            background: transparent;
+        }
+    }
+
+    &.mq-empty {
+        background: transparent;
+    }
+
+    .mq-text-mode {
+        display: inline-block;
+        white-space: pre;
+
+        &.mq-hasCursor {
+            box-shadow: inset $mq-color-hasCursor-shadow 0 0.1em 0.2em;
+            padding: 0 $mq-spacing-padding-small;
+            margin: 0 $mq-spacing-margin-negative-medium;
+            min-width: 1ex;
+        }
+    }
+
+    .mq-font {
+        font: 1em $mq-font-serif;
+
+        * {
+            font-family: inherit;
+            font-style: inherit;
+        }
+    }
+
+    b,
+    b.mq-font {
+        font-weight: bolder;
+    }
+
+    var,
+    i,
+    i.mq-font {
+        font-style: italic;
+    }
+
+    var.mq-f {
+        margin-right: $mq-spacing-margin-medium;
+        margin-left: $mq-spacing-padding-small;
+    }
+
+    .mq-roman var.mq-f {
+        margin: 0;
+    }
+
+    big {
+        font-size: $mq-font-size-large;
+    }
+
+    .mq-int {
+        > big {
+            display: inline-block;
+            -webkit-transform: scaleX(0.7);
+            -moz-transform: scaleX(0.7);
+            -ms-transform: scaleX(0.7);
+            -o-transform: scaleX(0.7);
+            transform: scaleX(0.7);
+            vertical-align: -0.16em;
+        }
+
+        > .mq-supsub {
+            font-size: $mq-font-size-small;
+            vertical-align: -1.1em;
+            padding-right: $mq-spacing-margin-medium;
+
+            > .mq-sup > .mq-sup-inner {
+                vertical-align: 1.3em;
+            }
+
+            > .mq-sub {
+                margin-left: $mq-spacing-margin-negative-large;
+            }
+        }
+    }
+
+    .mq-roman {
+        font-style: normal;
+    }
+
+    .mq-sans-serif {
+        font-family: $mq-font-sans-serif;
+    }
+
+    .mq-monospace {
+        font-family: $mq-font-monospace;
+    }
+
+    .mq-overline {
+        border-top: $mq-border-width solid;
+        margin-top: $mq-spacing-margin-vertical;
+    }
+
+    .mq-underline {
+        border-bottom: $mq-border-width solid;
+        margin-bottom: $mq-spacing-margin-vertical;
+    }
+
+    .mq-binary-operator {
+        padding: 0 $mq-spacing-margin-medium;
+        display: -moz-inline-box;
+        display: inline-block;
+    }
+
+    .mq-supsub {
+        text-align: left;
+        font-size: $mq-font-size-smaller;
+        vertical-align: -0.5em;
+
+        &.mq-sup-only {
+            vertical-align: 0.5em;
+
+            > .mq-sup {
+                display: inline-block;
+                vertical-align: text-bottom;
+            }
+        }
+
+        .mq-sup {
+            display: block;
+        }
+
+        .mq-sub {
+            display: block;
+            float: left;
+        }
+
+        .mq-binary-operator {
+            padding: 0 $mq-spacing-padding-small;
+        }
+
+        .mq-fraction {
+            font-size: $mq-font-size-tiny;
+        }
+    }
+
+    sup.mq-nthroot {
+        font-size: $mq-font-size-small;
+        vertical-align: 0.8em;
+        margin-right: -0.6em;
+        margin-left: $mq-spacing-margin-medium;
+        min-width: 0.5em;
+    }
+
+    .mq-ghost svg {
+        opacity: 0.2;
+    }
+
+    .mq-bracket-middle {
+        margin-top: $mq-spacing-padding-small;
+        margin-bottom: $mq-spacing-padding-small;
+    }
+
+    .mq-bracket-l,
+    .mq-bracket-r {
+        position: absolute;
+        top: 0;
+        bottom: $mq-spacing-padding;
+    }
+
+    .mq-bracket-l {
+        left: 0;
+    }
+
+    .mq-bracket-r {
+        right: 0;
+    }
+
+    .mq-bracket-container {
+        position: relative;
+    }
+
+    .mq-array {
+        vertical-align: middle;
+        text-align: center;
+
+        > span {
+            display: block;
+        }
+    }
+
+    .mq-operator-name {
+        font-family: $mq-font-symbola, "Times New Roman", serif;
+        line-height: 0.9;
+        font-style: normal;
+    }
+
+    var.mq-operator-name {
+        &.mq-first {
+            padding-left: $mq-spacing-margin-medium;
+        }
+
+        &.mq-last {
+            padding-right: $mq-spacing-margin-medium;
+        }
+    }
+
+    .mq-supsub.mq-after-operator-name {
+        padding-right: $mq-spacing-margin-medium;
+    }
+
+    .mq-fraction {
+        font-size: $mq-font-size-smaller;
+        text-align: center;
+        vertical-align: -0.4em;
+        padding: 0 $mq-spacing-margin-medium;
+    }
+
+    .mq-fraction,
+    .mq-large-operator,
+    x:-moz-any-link {
+        display: -moz-groupbox;
+    }
+
+    .mq-fraction,
+    .mq-large-operator,
+    x:-moz-any-link,
+    x:default {
+        display: inline-block;
+    }
+
+    .mq-numerator,
+    .mq-denominator,
+    .mq-dot-recurring {
+        display: block;
+    }
+
+    .mq-numerator {
+        padding: 0 $mq-spacing-padding-small;
+    }
+
+    .mq-denominator {
+        border-top: $mq-border-width solid;
+        float: right;
+        width: 100%;
+        padding: $mq-spacing-padding-small;
+    }
+
+    .mq-dot-recurring {
+        text-align: center;
+        height: 0.3em;
+    }
+
+    .mq-sqrt-prefix {
+        position: absolute;
+        top: $mq-spacing-margin-vertical;
+        bottom: 0.15em;
+        width: 0.95em;
+    }
+
+    .mq-sqrt-container {
+        position: relative;
+    }
+
+    .mq-sqrt-stem {
+        border-top: $mq-border-width solid;
+        margin-top: $mq-spacing-margin-vertical;
+        margin-left: 0.9em;
+        padding-left: 0.15em;
+        padding-right: $mq-spacing-margin-medium;
+        margin-right: $mq-spacing-padding-small;
+        padding-top: $mq-spacing-margin-vertical;
+    }
+
+    .mq-diacritic-above {
+        display: block;
+        text-align: center;
+        line-height: 0.4em;
+    }
+
+    .mq-diacritic-stem {
+        display: block;
+        text-align: center;
+    }
+
+    .mq-hat-prefix {
+        display: block;
+        text-align: center;
+        line-height: 0.95em;
+        margin-bottom: -0.7em;
+        transform: scaleX(1.5);
+        -moz-transform: scaleX(1.5);
+        -o-transform: scaleX(1.5);
+        -webkit-transform: scaleX(1.5);
+    }
+
+    .mq-hat-stem {
+        display: block;
+    }
+
+    .mq-large-operator {
+        vertical-align: -0.2em;
+        padding: $mq-spacing-margin-medium;
+        text-align: center;
+
+        .mq-from,
+        big,
+        .mq-to {
+            display: block;
+        }
+
+        .mq-from,
+        .mq-to {
+            font-size: $mq-font-size-small;
+        }
+
+        .mq-from {
+            float: right;
+            width: 100%;
+        }
+    }
+}
+
+// ==========================================================================
+// Cursor & selection
+// ==========================================================================
+
+.mq-math-mode,
+.mq-math-mode .mq-editable-field {
+    cursor: text;
+    font-family: $mq-font-symbola, "Times New Roman", serif;
+}
+
+.mq-math-mode .mq-overarc {
+    border-top: $mq-border-width solid $mq-color-border;
+    -webkit-border-top-right-radius: 50% 0.3em;
+    -moz-border-radius-topright: 50% 0.3em;
+    border-top-right-radius: 50% 0.3em;
+    -webkit-border-top-left-radius: 50% 0.3em;
+    -moz-border-radius-topleft: 50% 0.3em;
+    border-top-left-radius: 50% 0.3em;
+    margin-top: $mq-spacing-margin-vertical;
+    padding-top: 0.15em;
+}
+
+.mq-math-mode .mq-overarrow {
+    min-width: 0.5em;
+    border-top: $mq-border-width solid $mq-color-border;
+    margin-top: $mq-spacing-margin-vertical;
+    padding-top: $mq-spacing-margin-medium;
+    text-align: center;
+    position: relative;
+
+    &:after {
+        position: absolute;
+        right: -0.1em;
+        top: -0.48em;
+        font-size: $mq-font-size-micro;
+        content: "\27A4";
+    }
+
+    &.mq-arrow-left:after {
+        content: "";
+        display: none;
+    }
+
+    &.mq-arrow-left:before,
+    &.mq-arrow-leftright:before {
+        position: absolute;
+        top: -0.48em;
+        left: -0.1em;
+        font-size: $mq-font-size-micro;
+        content: "\27A4";
+        -moz-transform: scaleX(-1);
+        -o-transform: scaleX(-1);
+        -webkit-transform: scaleX(-1);
+        transform: scaleX(-1);
+        filter: FlipH;
+        -ms-filter: "FlipH";
+    }
+}
+
+.mq-math-mode .mq-selection,
+.mq-editable-field .mq-selection,
+.mq-math-mode .mq-selection .mq-non-leaf,
+.mq-editable-field .mq-selection .mq-non-leaf,
+.mq-math-mode .mq-selection .mq-scaled,
+.mq-editable-field .mq-selection .mq-scaled {
+    background: $mq-color-selection !important;
+}
+
+.mq-math-mode .mq-selection.mq-blur,
+.mq-editable-field .mq-selection.mq-blur,
+.mq-math-mode .mq-selection.mq-blur .mq-non-leaf,
+.mq-editable-field .mq-selection.mq-blur .mq-non-leaf,
+.mq-math-mode .mq-selection.mq-blur .mq-scaled,
+.mq-editable-field .mq-selection.mq-blur .mq-scaled {
+    background: $mq-color-selection-blur !important;
+    color: $mq-color-text;
+    border-color: $mq-color-text;
+}
+
+html body .mq-math-mode .mq-selection .mq-nthroot-container *,
+html body .mq-editable-field .mq-selection .mq-nthroot-container * {
+    background: transparent !important;
+}
+
+// ==========================================================================
+// Textarea
+// ==========================================================================
+
+.mq-editable-field .mq-textarea,
+.mq-math-mode .mq-textarea {
+    position: relative;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    user-select: text;
+
+    * {
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        user-select: text;
+        position: absolute;
+        clip: rect(1em 1em 1em 1em);
+        -webkit-transform: scale(0);
+        -moz-transform: scale(0);
+        -ms-transform: scale(0);
+        -o-transform: scale(0);
+        transform: scale(0);
+        resize: none;
+        width: 1px;
+        height: 1px;
+        box-sizing: content-box;
+    }
+}

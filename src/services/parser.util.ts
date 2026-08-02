@@ -75,8 +75,10 @@ class Parser<T> {
 
         return new Parser(function (stream, onSuccess, _onFailure) {
             var xs: T[] = []
-            while (self._(stream, success, failure))
-                return onSuccess(stream, xs)
+            while (self._(stream, success, failure)) {
+                // continue parsing as long as the parser succeeds
+            }
+            return onSuccess(stream, xs)
 
             function success(newStream: string, x: T) {
                 stream = newStream

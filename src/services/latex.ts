@@ -214,14 +214,6 @@ class Controller_latex extends Controller_keystroke {
             cursor = this.cursor
         var all = Parser.all
         var eof = Parser.eof
-        console.log('=== DEBUG PARSER ===');
-        console.log('latexMathParser type:', typeof latexMathParser);
-        console.log('latexMathParser._:', latexMathParser._); // функция-парсер
-        console.log('Trying parse "x":', latexMathParser.parse('x'));
-        console.log('Trying parse "1":', latexMathParser.parse('1'));
-        console.log('Trying parse "x^2":', latexMathParser.parse('x^2'));
-        console.log('Trying parse "\\frac":', latexMathParser.parse('\\frac'));
-        console.log('Trying parse your latex:', latexMathParser.parse(latex));
         const latexSkip = latexMathParser.skip(eof)
         const latexOr = latexSkip.or(all.result<false>(false))
         var block = latexOr.parse(latex)

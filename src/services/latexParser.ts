@@ -1,5 +1,5 @@
 import type { LatexCmdsSingleChar } from '../shared_types'
-import { Fragment, LatexCmds, MQNode } from '../tree'
+import { Fragment, LatexCmds, MQNode, isMQNodeClass } from '../tree'
 import { R } from '../types'
 import { VanillaSymbol, MathBlock } from '../commands/math/core'
 import { Parser } from '../services/parser.util'
@@ -54,14 +54,12 @@ export const latexMathParser = (function () {
         .then(function (ctrlSeq) {
             var cmdKlass = (LatexCmds as LatexCmdsSingleChar)[ctrlSeq]
             if (cmdKlass) {
-                if (cmdKlass.constructor) {
+                if (isMQNodeClass(cmdKlass)) {
                     return new (cmdKlass as typeof TempSingleCharNode)(ctrlSeq).parser()
-                } else {
-                    return (cmdKlass as (c: string) => TempSingleCharNode)(ctrlSeq).parser()
                 }
-            } else {
-                return fail('unknown command: \\' + ctrlSeq)
+                return (cmdKlass as (c: string) => TempSingleCharNode)(ctrlSeq).parser()
             }
+            return fail('unknown command: \\' + ctrlSeq)
         })
 
     var command = controlSequence.or(variable).or(number).or(symbol)

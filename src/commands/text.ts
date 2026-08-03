@@ -8,7 +8,6 @@ import type { HTMLTagName } from '../dom'
 import type { IEditableField, IBaseMathQuill, APIClasses } from '../publicapi'
 
 import { NodeBase, Fragment, LatexCmds, MQNode } from '../tree'
-import { pray, prayDirection } from '../utils'
 import { L, R } from '../types'
 import { h } from '../dom'
 import { DOMView, MathCommand, VanillaSymbol, MathBlock, RootMathBlock } from '../commands/math/core'
@@ -296,7 +295,6 @@ function TextBlockFuseChildren(self: TextBlock) {
     const children = self.domFrag().children()
     if (children.isEmpty()) return
     const textPcDom = children.oneText()
-    pray('only node in TextBlock span is Text node', textPcDom.nodeType === 3)
     // nodeType === 3 has meant a Text node since ancient times:
     //   http://reference.sitepoint.com/javascript/Node/nodeType
 
@@ -336,7 +334,6 @@ class TextPiece extends MQNode {
         this.domFrag().oneText().insertData(0, text)
     }
     insTextAtDirEnd(text: string, dir: Direction) {
-        prayDirection(dir)
         if (dir === R) this.appendText(text)
         else this.prependText(text)
     }
@@ -356,8 +353,6 @@ class TextPiece extends MQNode {
     }
 
     moveTowards(dir: Direction, cursor: Cursor) {
-        prayDirection(dir)
-
         var ch = this.endChar(-dir as Direction, this.textStr)
 
         var from = this[-dir as Direction]
@@ -398,7 +393,6 @@ class TextPiece extends MQNode {
     }
 
     selectTowards(dir: Direction, cursor: Cursor) {
-        prayDirection(dir)
         var anticursor = cursor.anticursor
         if (!anticursor) return
 

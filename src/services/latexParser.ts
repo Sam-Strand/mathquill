@@ -1,4 +1,5 @@
 import type { LatexCmdsSingleChar } from '../shared_types'
+
 import { Fragment, LatexCmds, MQNode, isMQNodeClass } from '../tree'
 import { R } from '../types'
 import { VanillaSymbol, MathBlock } from '../commands/math/core'

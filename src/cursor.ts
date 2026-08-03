@@ -8,7 +8,6 @@ import type { DOMFragment } from './domFragment'
 
 import { U_ZERO_WIDTH_SPACE } from './unicode'
 import { L, R } from './types'
-import { pray, prayDirection } from './utils'
 import { Point, MQNode } from './tree'
 import { domFrag } from './domFragment'
 import { h } from './dom'
@@ -119,7 +118,6 @@ class Cursor extends Point {
     }
     /** Place the cursor before or after `el`, according the side specified by `dir`. */
     insDirOf(dir: Direction, el: MQNode) {
-        prayDirection(dir)
         this.domFrag().insDirOf(dir, el.domFrag())
         this.withDirInsertAt(dir, el.parent, el[dir], el)
         this.parent.domFrag().addClass('mq-hasCursor')
@@ -134,7 +132,6 @@ class Cursor extends Point {
 
     /** Place the cursor inside `el` at either the left or right end, according the side specified by `dir`. */
     insAtDirEnd(dir: Direction, el: MQNode) {
-        prayDirection(dir)
         this.domFrag().insAtDirEnd(dir, el.domFrag().oneElement())
         this.withDirInsertAt(dir, el, 0, el.getEnd(dir))
         el.focus()
@@ -274,7 +271,7 @@ class Cursor extends Point {
                 break
             }
         }
-        pray('cursor and anticursor in the same tree', _lca)
+        
         var lca = _lca as MQNode
 
         // The cursor and the anticursor should be in the same tree, because the

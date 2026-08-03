@@ -1,13 +1,12 @@
 import type { Direction } from './types'
+import type { ControllerEvent, ControllerRoot, ControllerData, HandlersWithoutDirection, HandlerOptions, HandlersWithDirection } from './shared_types'
+import type { Controller } from './services/textarea'
+
 import { L, R } from './types'
 import { Cursor } from './cursor'
-import { pray } from './utils'
-import type { ControllerEvent, ControllerRoot, ControllerData } from './shared_types'
 import { Aria } from './services/aria'
-import type { Controller } from './services/textarea'
 import { KIND_OF_MQ } from './publicapi'
 import { Options } from './options'
-import type { HandlersWithoutDirection, HandlerOptions, HandlersWithDirection } from './shared_types'
 
 type TextareaKeyboardEventListeners = Partial<{
     [K in keyof HTMLElementEventMap]: (event: HTMLElementEventMap[K]) => any
@@ -80,7 +79,6 @@ class ControllerBase {
         const handler = this.options.handlers?.fns[name]
         if (handler) {
             const APIClass = handlers?.APIClasses[this.KIND_OF_MQ]
-            pray('APIClass is defined', APIClass)
             var mq = new APIClass(this as any); // cast to any bedcause APIClass needs the final Controller subclass.
             if (dir === L || dir === R)
                 (handler as HandlerWithDirectionFunction)(dir, mq)

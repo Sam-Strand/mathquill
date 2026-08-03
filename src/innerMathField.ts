@@ -1,10 +1,9 @@
 import type { APIClasses } from './publicapi'
+
 import { API } from './registry'
-import { pray } from './utils'
 import { domFrag } from './domFragment'
 
 API.InnerMathField = function (APIClasses: APIClasses) {
-    pray('MathField class is defined', APIClasses.MathField)
     return class extends APIClasses.MathField {
         makeStatic() {
             this.__controller.editable = false

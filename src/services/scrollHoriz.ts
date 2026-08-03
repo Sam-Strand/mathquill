@@ -3,10 +3,7 @@
  * overflow their width
  **********************************************/
 import { L, R } from '../types'
-import {
-    getBoundingClientRect
-} from '../browser'
-
+import { getBoundingClientRect } from '../browser'
 import { Controller_mouse } from '../services/mouse'
 import { animate } from '../animate'
 

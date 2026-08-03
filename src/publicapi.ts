@@ -9,7 +9,6 @@ import './innerMathField'
 import './commands/math'
 
 import { L, R, } from './types'
-import { pray } from './utils'
 import { NodeBase, LatexCmds } from './tree'
 import { domFrag } from './domFragment'
 import { h } from './dom'
@@ -333,12 +332,10 @@ const MathQuill = (() => {
         EditableField,
     } as unknown as APIClasses
 
-    pray('API.StaticMath defined', API.StaticMath)
     APIClasses.StaticMath = API.StaticMath(APIClasses)
-    pray('API.MathField defined', API.MathField)
     APIClasses.MathField = API.MathField(APIClasses)
-    pray('API.InnerMathField defined', API.InnerMathField)
     APIClasses.InnerMathField = API.InnerMathField(APIClasses)
+
     if (API.TextField) {
         APIClasses.TextField = API.TextField(APIClasses)
     }
@@ -385,8 +382,6 @@ const MathQuill = (() => {
         K extends keyof typeof API,
         MQClass extends IBaseMathQuillClass | IEditableFieldClass
     >(kind: K, APIClass: MQClass) {
-        pray(kind + ' is defined', APIClass)
-
         function mqEntrypoint(el: null | undefined): null
         function mqEntrypoint(el: HTMLElement, config?: ConfigOptions): InstanceType<MQClass>
         function mqEntrypoint(el?: HTMLElement | null, opts?: ConfigOptions) {

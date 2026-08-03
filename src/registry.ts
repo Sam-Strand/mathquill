@@ -1,4 +1,3 @@
-// src/registry.ts
 import type { EmbedOptionsData, EmbedOptions } from './shared_types'
 
 // Конструкторы API-классов будут добавляться другими модулями

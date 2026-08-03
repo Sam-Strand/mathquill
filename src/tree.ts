@@ -1,4 +1,3 @@
-//tree.ts
 /*************************************************
  * Base classes of edit tree-related objects
  *
@@ -14,7 +13,6 @@ import type { Cursor } from './cursor'
 import type { Controller } from './services/textarea'
 
 import { L, R } from './types'
-import { pray, prayDirection } from './utils'
 import { domFrag } from './domFragment'
 import { Parser } from './services/parser.util'
 import { Options } from './options'
@@ -145,7 +143,6 @@ class NodeBase {
 
     setEnds(ends: Ends<NodeRef>) {
         this.ends = ends
-        pray('No half-empty node ends', !!this.ends[L] === !!this.ends[R])
     }
 
     getEnd(dir: Direction) {
@@ -178,13 +175,6 @@ class NodeBase {
     }
 
     setDOM(el: Element | Text | undefined) {
-        if (el) {
-            pray(
-                'DOM is an element or a text node',
-                el.nodeType === Node.ELEMENT_NODE || el.nodeType === Node.TEXT_NODE
-            )
-        }
-
         this._el = el
         return this
     }
@@ -194,7 +184,6 @@ class NodeBase {
     }
 
     createDir(dir: Direction, cursor: Cursor) {
-        prayDirection(dir)
         var node = this
         node.html()
         node.domFrag().insDirOf(dir, cursor.domFrag())
@@ -315,19 +304,21 @@ class NodeBase {
         return true
     }
     // Overridden by child classes
-    parser(): Parser<MQNode | Fragment> {
-        pray('Abstract parser() method is never called', false)
-    }
+    parser(): Parser<MQNode | Fragment> {}
+
     /** Render this node to DOM */
     html(): Node | DocumentFragment {
         throw new Error('html() unimplemented in NodeBase')
     }
+
     text(): string {
         return ''
     }
+
     latex(): string {
         return ''
     }
+
     finalizeTree(_options: Options, _dir?: Direction) { }
     contactWeld(_cursor: Cursor, _dir?: Direction) { }
     blur(_cursor?: Cursor) { }
@@ -335,9 +326,7 @@ class NodeBase {
     intentionalBlur() { }
     reflow() { }
     registerInnerField(_innerFields: InnerFields, _mathField: InnerMathField) { }
-    chToCmd(_ch: string, _options?: Options): this {
-        pray('Abstract chToCmd() method is never called', false)
-    }
+    chToCmd(_ch: string, _options?: Options): this {}
     mathspeak(_options?: MathspeakOptions) {
         return ''
     }
@@ -545,52 +534,13 @@ class MQNode extends NodeBase {
         ctrlr.scrollHoriz()
     }
 
-    moveOutOf(_dir: Direction, _cursor: Cursor, _updown?: 'up' | 'down') {
-        pray('overridden or never called on this node', false)
-    } // called by Controller::escapeDir, moveDir
-    moveTowards(_dir: Direction, _cursor: Cursor, _updown?: 'up' | 'down') {
-        pray('overridden or never called on this node', false)
-    } // called by Controller::moveDir
-    deleteOutOf(_dir: Direction, _cursor: Cursor) {
-        pray('overridden or never called on this node', false)
-    } // called by Controller::deleteDir
-    deleteTowards(_dir: Direction, _cursor: Cursor) {
-        pray('overridden or never called on this node', false)
-    } // called by Controller::deleteDir
-    unselectInto(_dir: Direction, _cursor: Cursor) {
-        pray('overridden or never called on this node', false)
-    } // called by Controller::selectDir
-    selectOutOf(_dir: Direction, _cursor: Cursor) {
-        pray('overridden or never called on this node', false)
-    } // called by Controller::selectDir
-    selectTowards(_dir: Direction, _cursor: Cursor) {
-        pray('overridden or never called on this node', false)
-    } // called by Controller::selectDir
-}
-
-function prayWellFormed(parent: MQNode, leftward: NodeRef, rightward: NodeRef) {
-    pray('a parent is always present', parent)
-    pray(
-        'leftward is properly set up',
-        (function () {
-            // either it's empty and `rightward` is the left end child (possibly empty)
-            if (!leftward) return parent.getEnd(L) === rightward
-
-            // or it's there and its [R] and .parent are properly set up
-            return leftward[R] === rightward && leftward.parent === parent
-        })()
-    )
-
-    pray(
-        'rightward is properly set up',
-        (function () {
-            // either it's empty and `leftward` is the right end child (possibly empty)
-            if (!rightward) return parent.getEnd(R) === leftward
-
-            // or it's there and its [L] and .parent are properly set up
-            return rightward[L] === leftward && rightward.parent === parent
-        })()
-    )
+    moveOutOf(_dir: Direction, _cursor: Cursor, _updown?: 'up' | 'down') {} // called by Controller::escapeDir, moveDir
+    moveTowards(_dir: Direction, _cursor: Cursor, _updown?: 'up' | 'down') {} // called by Controller::moveDir
+    deleteOutOf(_dir: Direction, _cursor: Cursor) {} // called by Controller::deleteDir
+    deleteTowards(_dir: Direction, _cursor: Cursor) {} // called by Controller::deleteDir
+    unselectInto(_dir: Direction, _cursor: Cursor) {} // called by Controller::selectDir
+    selectOutOf(_dir: Direction, _cursor: Cursor) {} // called by Controller::selectDir
+    selectTowards(_dir: Direction, _cursor: Cursor) {} // called by Controller::selectDir
 }
 
 /**
@@ -617,21 +567,11 @@ class Fragment {
 
     constructor(withDir: NodeRef, oppDir: NodeRef, dir?: Direction) {
         if (dir === undefined) dir = L
-        prayDirection(dir)
-
-        pray('no half-empty fragments', !withDir === !oppDir)
 
         if (!withDir || !oppDir) {
             this.setEnds({ [L]: 0, [R]: 0 })
             return
         }
-
-        pray('withDir is passed to Fragment', withDir instanceof MQNode)
-        pray('oppDir is passed to Fragment', oppDir instanceof MQNode)
-        pray(
-            'withDir and oppDir have the same parent',
-            withDir.parent === oppDir.parent
-        )
 
         const ends = {
             [dir as Direction]: withDir,
@@ -644,10 +584,6 @@ class Fragment {
         this.each((el) => {
             maybeRightEnd = el
         })
-        pray(
-            'following direction siblings from start reaches end',
-            maybeRightEnd === ends[R]
-        )
     }
 
     getDOMFragFromEnds() {
@@ -699,8 +635,6 @@ class Fragment {
      * TODO: why do we need both leftward and rightward? It seems to me that `rightward` is always expected to be `leftward ? leftward[R] : parent.ends[L]`.
      */
     adopt(parent: MQNode, leftward: NodeRef, rightward: NodeRef) {
-        prayWellFormed(parent, leftward, rightward)
-
         var self = this
         this.disowned = false
 
@@ -756,9 +690,6 @@ class Fragment {
         var rightEnd = self.ends[R]
         if (!rightEnd) return self
         var parent = leftEnd.parent
-
-        prayWellFormed(parent, leftEnd[L], leftEnd)
-        prayWellFormed(parent, rightEnd, rightEnd[R])
 
         var ends = { [L]: parent.getEnd(L), [R]: parent.getEnd(R) }
         if (leftEnd[L]) {
@@ -829,6 +760,5 @@ export {
     isMQNodeClass,
     eachNode,
     foldNodes,
-    prayWellFormed,
     MQNode
 }

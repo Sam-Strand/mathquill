@@ -1,4 +1,3 @@
-//staticMath.ts
 import type { ConfigOptions, InnerFields } from './shared_types'
 import type { APIClasses, IBaseMathQuill } from './publicapi'
 

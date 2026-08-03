@@ -15,7 +15,6 @@ import type { NodeRef } from '../shared_types'
 import type { Controller } from '../services/textarea'
 
 import { Fragment, MQNode } from '../tree'
-import { prayDirection } from '../utils'
 import { L } from '../types'
 import { domFrag } from '../domFragment'
 import { h } from '../dom'
@@ -72,11 +71,9 @@ class Aria {
         return this
     }
     queueDirOf(dir: Direction) {
-        prayDirection(dir)
         return this.queue(dir === L ? 'before' : 'after')
     }
     queueDirEndOf(dir: Direction) {
-        prayDirection(dir)
         return this.queue(dir === L ? 'beginning of' : 'end of')
     }
 

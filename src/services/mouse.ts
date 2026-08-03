@@ -5,7 +5,6 @@ import { domFrag } from '../domFragment'
 import { closest } from '../dom'
 import { Options } from '../options'
 import { Cursor } from '../cursor'
-import { noop } from '../utils'
 import { Controller_latex } from '../services/latex'
 import { ControllerBase } from '../controller'
 
@@ -135,7 +134,7 @@ class Controller_mouse extends Controller_latex {
             if (wasEdited) return
         }
 
-        cursor.blink = noop
+        cursor.blink = () => { }
         ctrlr
             .seek(e.target as HTMLElement | null, e.clientX, e.clientY)
             .cursor.startSelection()

@@ -41,7 +41,6 @@
 import type { Direction, Ends } from './types'
 
 import { L, R } from './types'
-import { pray } from './utils'
 
 class DOMFragment {
     ends: Ends<Node> | undefined
@@ -61,9 +60,7 @@ class DOMFragment {
         last?: Node | undefined
     ): DOMFragment {
         if (arguments.length === 1) last = first
-        pray('No half-empty DOMFragments', !!first === !!last)
         const out = new DOMFragment(first, last)
-        pray('last is a forward sibling of first', out.isValid())
         return out
     }
 
@@ -112,7 +109,6 @@ class DOMFragment {
      * Asserts fragment is not empty.
      */
     firstNode() {
-        pray('Fragment is not empty', this.ends)
         return this.ends[L]
     }
 
@@ -123,7 +119,6 @@ class DOMFragment {
      * Asserts fragment is not empty.
      */
     lastNode() {
-        pray('Fragment is not empty', this.ends)
         return this.ends[R]
     }
 
@@ -165,7 +160,6 @@ class DOMFragment {
             }
             current = current.nextSibling
         }
-        pray('sibling must be a forward DOM sibling of this fragment', found)
 
         return new DOMFragment(this.ends[L], sibling.ends[R])
     }
@@ -176,10 +170,6 @@ class DOMFragment {
      * Asserts that this fragment contains exactly one Node.
      */
     oneNode(): Node {
-        pray(
-            'Fragment has a single node',
-            this.ends && this.ends[L] === this.ends[R]
-        )
         return this.ends[L]
     }
 
@@ -191,7 +181,6 @@ class DOMFragment {
      */
     oneElement(): HTMLElement {
         const el = this.oneNode()
-        pray('Node is an Element', el.nodeType === Node.ELEMENT_NODE)
         return el as HTMLElement
     }
 
@@ -203,7 +192,6 @@ class DOMFragment {
      */
     oneText(): Text {
         const el = this.oneNode()
-        pray('Node is Text', el.nodeType === Node.TEXT_NODE)
         return el as Text
     }
 

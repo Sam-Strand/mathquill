@@ -9,7 +9,6 @@ import type { Direction } from '../types'
 
 import { MQNode, Fragment } from '../tree'
 import { L, R } from '../types'
-import { pray, prayDirection } from '../utils'
 import { Controller_focusBlur } from './focusBlur'
 import { ControllerBase } from '../controller'
 import { Anticursor, Cursor } from '../cursor'
@@ -58,7 +57,6 @@ class Controller_keystroke extends Controller_focusBlur {
     }
 
     escapeDir(dir: Direction, _key: string, e?: KeyboardEvent) {
-        prayDirection(dir)
         var cursor = this.cursor
 
         // only prevent default of Tab if not in the root editable
@@ -74,7 +72,6 @@ class Controller_keystroke extends Controller_focusBlur {
         return this.notify('move')
     }
     moveDir(dir: Direction) {
-        prayDirection(dir)
         var cursor = this.cursor,
             updown = cursor.options.leftRightIntoCmdGoes
         var cursorDir = cursor[dir]
@@ -148,7 +145,6 @@ class Controller_keystroke extends Controller_focusBlur {
         return self
     }
     deleteDir(dir: Direction) {
-        prayDirection(dir)
         var cursor = this.cursor
         var cursorEl = cursor[dir] as MQNode
         var cursorElParent = cursor.parent.parent
@@ -208,7 +204,6 @@ class Controller_keystroke extends Controller_focusBlur {
         return this
     }
     ctrlDeleteDir(dir: Direction) {
-        prayDirection(dir)
         var cursor = this.cursor
         if (!cursor[dir] || cursor.selection) return this.deleteDir(dir)
 
@@ -254,11 +249,6 @@ class Controller_keystroke extends Controller_focusBlur {
      * be called in sequence.
      */
     startIncrementalSelection() {
-        pray(
-            "Multiple selections can't be simultaneously open",
-            !INCREMENTAL_SELECTION_OPEN
-        )
-
         INCREMENTAL_SELECTION_OPEN = true
         this.notify('select')
         var cursor = this.cursor
@@ -274,12 +264,10 @@ class Controller_keystroke extends Controller_focusBlur {
      * be called in sequence.
      */
     selectDirIncremental(dir: Direction) {
-        pray('A selection is open', INCREMENTAL_SELECTION_OPEN)
         INCREMENTAL_SELECTION_OPEN = true
 
         var cursor = this.cursor,
             seln = cursor.selection
-        prayDirection(dir)
 
         var node = cursor[dir]
         if (node) {
@@ -304,7 +292,6 @@ class Controller_keystroke extends Controller_focusBlur {
      * be called in sequence.
      */
     finishIncrementalSelection() {
-        pray('A selection is open', INCREMENTAL_SELECTION_OPEN)
         var cursor = this.cursor
         cursor.clearSelection()
         cursor.select() || cursor.show()

@@ -5,12 +5,11 @@
 import type { NodeRef, MathspeakOptions, InequalityData, LatexCmdsAny } from '../../shared_types'
 import type { AutoDict } from '../../publicapi'
 import type { Direction } from '../../types'
+import type { TempSingleCharNode } from '../../services/latex'
 
 import { Fragment, LatexCmds, CharCmds, isMQNodeClass, MQNode } from '../../tree'
 import { L, R } from '../../types'
-import { max, min } from '../../utils'
 import './LatexCommandInput'
-
 import { U_NO_BREAK_SPACE } from '../../unicode'
 import { domFrag } from '../../domFragment'
 import { h } from '../../dom'
@@ -18,7 +17,6 @@ import { DOMView, MathCommand, MQSymbol, VanillaSymbol, BinaryOperator, MathBloc
 import { Options, baseOptionProcessors } from '../../options'
 import { Cursor } from '../../cursor'
 import { Parser } from '../../services/parser.util'
-import type { TempSingleCharNode } from '../../services/latex'
 import { latexMathParser, setLatexParserNodeConstructors } from '../../services/latexParser'
 import { SupSub, PercentOfBuilder, SubscriptCommand, AnsBuilder, SummationNotation, Bracket } from './commands'
 
@@ -320,7 +318,7 @@ baseOptionProcessors.autoCommands = function (cmds: string | undefined) {
             throw '"' + cmd + '" is a built-in operator name'
         }
         dict[cmd] = 1
-        maxLength = max(maxLength, cmd.length)
+        maxLength = Math.max(maxLength, cmd.length)
     }
     dict._maxLength = maxLength
     return dict
@@ -351,7 +349,7 @@ baseOptionProcessors.autoParenthesizedFunctions = function (cmds) {
             throw 'autocommand "' + cmd + '" not minimum length of 2'
         }
         dict[cmd] = 1
-        maxLength = max(maxLength, cmd.length)
+        maxLength = Math.max(maxLength, cmd.length)
     }
     dict._maxLength = maxLength
     return dict
@@ -515,7 +513,7 @@ class Letter extends Variable {
             first && i < str.length;
             i += 1, first = (first as MQNode)[R]
         ) {
-            for (var len = min(autoOpsLength, str.length - i); len > 0; len -= 1) {
+            for (var len = Math.min(autoOpsLength, str.length - i); len > 0; len -= 1) {
                 var word = str.slice(i, i + len)
                 var last: MQNode = undefined!; // TODO - TS complaining that we use last before assigning to it
 
@@ -663,7 +661,7 @@ baseOptionProcessors.autoOperatorNames = function (cmds) {
         if (cmd.indexOf('|') < 0) {
             // normal auto operator
             dict[cmd] = cmd
-            maxLength = max(maxLength, cmd.length)
+            maxLength = Math.max(maxLength, cmd.length)
         } else {
             // this item has a speech-friendly alternative
             var cmdArray = cmd.split('|')
@@ -674,7 +672,7 @@ baseOptionProcessors.autoOperatorNames = function (cmds) {
                 throw '"' + cmd[0] + '" not minimum length of 2'
             }
             dict[cmdArray[0]] = cmdArray[1].replace(/-/g, ' '); // convert dashes to spaces for the sake of speech
-            maxLength = max(maxLength, cmdArray[0].length)
+            maxLength = Math.max(maxLength, cmdArray[0].length)
         }
     }
     dict._maxLength = maxLength

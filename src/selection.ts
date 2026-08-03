@@ -1,11 +1,9 @@
+import type { Ends, Direction } from './types'
+import type { NodeRef, JoinMethod } from './shared_types'
+
 import { domFrag } from './domFragment'
 import { h } from './dom'
 import { Fragment, MQNode } from './tree'
-import { L, R } from './types'
-import type { Ends, Direction } from './types'
-import type { NodeRef, JoinMethod } from './shared_types'
-import { pray } from './utils'
-
 
 class MQSelection extends Fragment {
     declare ends: Ends<MQNode>
@@ -26,7 +24,6 @@ class MQSelection extends Fragment {
     }
 
     setEnds(ends: Ends<MQNode>) {
-        pray('Selection ends are never empty', ends[L] && ends[R])
         this.ends = ends
     }
 

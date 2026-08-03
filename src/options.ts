@@ -1,4 +1,3 @@
-// src/options.ts
 import type { HandlerOptions,  ConfigOptions } from './shared_types'
 import type { APIClasses } from './publicapi'
 

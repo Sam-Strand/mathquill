@@ -1,8 +1,8 @@
-
 /**
  * Like `el.getBoundingClientRect()` but avoids throwing for
  * disconnected and hidden elements in IE <= 11.
- * */
+ *
+ */
 
 function getBoundingClientRect(el: HTMLElement): DOMRect {
     // Return zeros for disconnected and hidden (display: none) elements

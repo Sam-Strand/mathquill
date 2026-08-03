@@ -1,6 +1,6 @@
-//math.ts
 import type { NodeRef, LatexCmdsSingleCharBuilder, CharCmdsAny, LatexCmdsAny } from '../shared_types'
-import type { MQNode, Fragment } from '../tree';
+import type { MQNode, Fragment } from '../tree'
+
 import { LatexCmds, CharCmds, isMQNodeClass } from '../tree'
 import { L, R } from '../types'
 import { domFrag } from '../domFragment'

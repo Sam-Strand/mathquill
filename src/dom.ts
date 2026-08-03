@@ -1,4 +1,3 @@
-import { pray } from './utils'
 import { NodeBase } from './tree'
 import { MathBlock } from './commands/math/core'
 
@@ -104,12 +103,6 @@ h.block = (
 h.entityText = (s: string) => {
     // TODO: replace with h.text(U_BLAHBLAH) or maybe a named entity->unicode lookup
     const val = parseHTML(s)
-    pray(
-        'entity parses to a single text node',
-        val instanceof DocumentFragment &&
-        val.childNodes.length === 1 &&
-        val.childNodes[0] instanceof Text
-    )
     return val.childNodes[0] as Text
 }
 

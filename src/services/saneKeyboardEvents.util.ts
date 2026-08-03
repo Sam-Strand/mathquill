@@ -1,10 +1,9 @@
 import type { Controller } from '../services/textarea'
-import { noop} from '../utils'
 
 /** Poller that fires once every tick. */
 class EveryTick<Args extends unknown[] = []> {
     timeoutId: number
-    fn: (...args: Args | []) => void = noop
+    fn: (...args: Args | []) => void = () => { }
     constructor() { }
 
     listen(fn: (...args: Args | []) => void) {
@@ -21,7 +20,7 @@ class EveryTick<Args extends unknown[] = []> {
     }
 
     clearListener() {
-        this.fn = noop
+        this.fn = () => { }
         clearTimeout(this.timeoutId)
     }
 

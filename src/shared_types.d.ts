@@ -1,8 +1,8 @@
 import type { MQNode } from './tree'
-import type { Options } from './options'
 import type { Cursor } from './cursor'
 import type { Controller } from './services/textarea'
 import type { TempSingleCharNode } from './services/latex'
+
 type NodeRef = MQNode | 0
 type ControllerEvent =
   | 'move'
@@ -12,8 +12,6 @@ type ControllerEvent =
   | 'select'
   | undefined
 type JoinMethod = 'mathspeak' | 'latex' | 'text'
-
-type Options = Options
 
 // These types are just aliases for the corresponding public types, for use in internal code.
 // If we version the interface, these can be changed to "MathQuill.v4...." (or maybe "MathQuill.v3.... | MathQuill.v3....")

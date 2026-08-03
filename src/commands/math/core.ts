@@ -1,4 +1,3 @@
-// src/commands/math/core.ts
 import type { Ends, Direction } from '../../types'
 import type { NodeRef, MathspeakOptions, JoinMethod } from '../../shared_types'
 import type { Controller } from '../../services/textarea'
@@ -6,7 +5,6 @@ import type { Options } from '../../options'
 import type { Cursor, Anticursor } from '../../cursor'
 
 import { NodeBase, MQNode, Fragment  } from '../../tree'
-import { pray } from '../../utils'
 import { L, R } from '../../types'
 import { h } from '../../dom'
 import { getBoundingClientRect } from '../../browser'
@@ -109,7 +107,6 @@ export class MathCommand extends MathElement {
     }
 
     setEnds(ends: Ends<MQNode>) {
-        pray('MathCommand ends are never empty', ends[L] && ends[R])
         this.ends = ends
     }
 
@@ -274,7 +271,6 @@ export class MathCommand extends MathElement {
      */
     html(): Element | DocumentFragment {
         const blocks = this.blocks
-        pray('domView is defined', this.domView)
         const template = this.domView
         const dom = template.render(blocks || [])
         this.setDOM(dom)

@@ -7,7 +7,6 @@ import { h } from '../dom'
 import { Controller_scrollHoriz } from './scrollHoriz'
 import { Options } from '../options'
 import { MQNode } from '../tree'
-import { noop } from '../utils'
 import { saneKeyboardEvents } from './saneKeyboardEvents.util'
 
 Options.prototype.substituteTextarea = function () {
@@ -21,7 +20,7 @@ Options.prototype.substituteTextarea = function () {
 }
 
 class Controller extends Controller_scrollHoriz {
-    selectFn: (text: string) => void = noop
+    selectFn: (text: string) => void = () => { }
 
     createTextarea() {
         this.textareaSpan = h('span', { class: 'mq-textarea' })

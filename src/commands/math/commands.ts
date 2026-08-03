@@ -8,7 +8,6 @@ import type { DOMFragment } from '../../domFragment'
 import type { ControllerRoot, EmbedOptions } from '../../shared_types'
 
 import { Point, NodeBase, Fragment, LatexCmds, CharCmds, MQNode } from '../../tree'
-import { pray, noop } from '../../utils'
 import { L, R } from '../../types'
 import { U_ZERO_WIDTH_SPACE, U_DOT_ABOVE, U_NARY_SUMMATION, U_NARY_PRODUCT, U_NARY_COPRODUCT, U_INTEGRAL } from '../../unicode'
 import { domFrag } from '../../domFragment'
@@ -297,10 +296,6 @@ class SupSub extends MathCommand {
     declare ends: Ends<MathBlock>
     override isSupSub(): boolean { return true; }
     setEnds(ends: Ends<MathBlock>) {
-        pray(
-            'SupSub ends must be MathBlocks',
-            ends[L] instanceof MathBlock && ends[R] instanceof MathBlock
-        )
         this.ends = ends
     }
 
@@ -878,7 +873,7 @@ var LiveFraction =
                             leftward &&
                             !(
                                 leftward instanceof BinaryOperator ||
-                                leftward instanceof (LatexCmds.text || noop) ||
+                                leftward instanceof (LatexCmds.text || (()=>{})) ||
                                 leftward instanceof SummationNotation ||
                                 leftward.ctrlSeq === '\\ ' ||
                                 /^[,;:]$/.test(leftward.ctrlSeq as string)

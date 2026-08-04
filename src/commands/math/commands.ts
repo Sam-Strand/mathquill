@@ -537,7 +537,7 @@ class SummationNotation extends MathCommand {
             ])
         )
 
-        MQSymbol.prototype.setCtrlSeqHtmlTextAndMathspeak.call(this, ch, domView)
+        MQSymbol.prototype.setCtrlSeqHtmlText.call(this, ch, domView)
     }
     createLeftOf(cursor: Cursor) {
         super.createLeftOf(cursor)

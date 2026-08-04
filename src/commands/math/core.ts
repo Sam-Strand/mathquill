@@ -312,7 +312,7 @@ export class MQSymbol extends MathCommand {
         text?: string
     ) {
         super()
-        this.setCtrlSeqHtmlTextAndMathspeak(
+        this.setCtrlSeqHtmlText(
             ctrlSeq,
             html
                 ? new DOMView(0, () => html.cloneNode(true) as HTMLElement)
@@ -321,7 +321,7 @@ export class MQSymbol extends MathCommand {
         )
     }
 
-    setCtrlSeqHtmlTextAndMathspeak(
+    setCtrlSeqHtmlText(
         ctrlSeq?: string,
         html?: DOMView,
         text?: string

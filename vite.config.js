@@ -3,10 +3,7 @@ import dts from 'vite-plugin-dts'
 
 export default defineConfig({
     plugins: [
-        dts({
-            skipDiagnostics: true,
-            logLevel: 'error', 
-        })
+        dts()
     ],
     build: {
         lib: {

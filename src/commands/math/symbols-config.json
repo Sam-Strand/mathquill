@@ -1,0 +1,1262 @@
+{
+    "binarySymbols": [
+        {
+            "aliases": [
+                "∗",
+                "ast",
+                "star",
+                "loast",
+                "lowast"
+            ],
+            "latex": "\\ast ",
+            "html": "&lowast;"
+        },
+        {
+            "aliases": [
+                "therefor",
+                "therefore"
+            ],
+            "latex": "\\therefore ",
+            "html": "&there4;"
+        },
+        {
+            "aliases": [
+                "cuz",
+                "because"
+            ],
+            "latex": "\\because ",
+            "html": "&#8757;"
+        },
+        {
+            "aliases": [
+                "prop",
+                "propto"
+            ],
+            "latex": "\\propto ",
+            "html": "&prop;"
+        },
+        {
+            "aliases": [
+                "≈",
+                "asymp",
+                "approx"
+            ],
+            "latex": "\\approx ",
+            "html": "&asymp;"
+        },
+        {
+            "aliases": [
+                "isin",
+                "in"
+            ],
+            "latex": "\\in ",
+            "html": "&isin;"
+        },
+        {
+            "aliases": [
+                "ni",
+                "contains"
+            ],
+            "latex": "\\ni ",
+            "html": "&ni;"
+        },
+        {
+            "aliases": [
+                "notni",
+                "niton",
+                "notcontains",
+                "doesnotcontain"
+            ],
+            "latex": "\\not\\ni ",
+            "html": "&#8716;"
+        },
+        {
+            "aliases": [
+                "sub",
+                "subset"
+            ],
+            "latex": "\\subset ",
+            "html": "&sub;"
+        },
+        {
+            "aliases": [
+                "sup",
+                "supset",
+                "superset"
+            ],
+            "latex": "\\supset ",
+            "html": "&sup;"
+        },
+        {
+            "aliases": [
+                "nsub",
+                "notsub",
+                "nsubset",
+                "notsubset"
+            ],
+            "latex": "\\not\\subset ",
+            "html": "&#8836;"
+        },
+        {
+            "aliases": [
+                "nsup",
+                "notsup",
+                "nsupset",
+                "notsupset",
+                "nsuperset",
+                "notsuperset"
+            ],
+            "latex": "\\not\\supset ",
+            "html": "&#8837;"
+        },
+        {
+            "aliases": [
+                "sube",
+                "subeq",
+                "subsete",
+                "subseteq"
+            ],
+            "latex": "\\subseteq ",
+            "html": "&sube;"
+        },
+        {
+            "aliases": [
+                "supe",
+                "supeq",
+                "supsete",
+                "supseteq",
+                "supersete",
+                "superseteq"
+            ],
+            "latex": "\\supseteq ",
+            "html": "&supe;"
+        },
+        {
+            "aliases": [
+                "nsube",
+                "nsubeq",
+                "notsube",
+                "notsubeq",
+                "nsubsete",
+                "nsubseteq",
+                "notsubsete",
+                "notsubseteq"
+            ],
+            "latex": "\\not\\subseteq ",
+            "html": "&#8840;"
+        },
+        {
+            "aliases": [
+                "nsupe",
+                "nsupeq",
+                "notsupe",
+                "notsupeq",
+                "nsupsete",
+                "nsupseteq",
+                "notsupsete",
+                "notsupseteq",
+                "nsupersete",
+                "nsuperseteq",
+                "notsupersete",
+                "notsuperseteq"
+            ],
+            "latex": "\\not\\supseteq ",
+            "html": "&#8841;"
+        },
+        {
+            "aliases": [
+                "impliedby"
+            ],
+            "latex": "\\Leftarrow ",
+            "html": "&lArr;"
+        },
+        {
+            "aliases": [
+                "iff"
+            ],
+            "latex": "\\Leftrightarrow ",
+            "html": "&hArr;"
+        },
+        {
+            "aliases": [
+                "gets"
+            ],
+            "latex": "\\gets ",
+            "html": "&larr;"
+        },
+        {
+            "aliases": [
+                "implies"
+            ],
+            "latex": "\\Rightarrow ",
+            "html": "&rArr;"
+        },
+        {
+            "aliases": [
+                "and",
+                "land",
+                "wedge"
+            ],
+            "latex": "\\wedge ",
+            "html": "&and;"
+        },
+        {
+            "aliases": [
+                "or",
+                "lor",
+                "vee"
+            ],
+            "latex": "\\vee ",
+            "html": "&or;"
+        },
+        {
+            "aliases": [
+                "cup",
+                "union"
+            ],
+            "latex": "\\cup ",
+            "html": "&cup;"
+        },
+        {
+            "aliases": [
+                "cap",
+                "intersect",
+                "intersection"
+            ],
+            "latex": "\\cap ",
+            "html": "&cap;"
+        },
+        {
+            "aliases": [
+                "o",
+                "O",
+                "empty",
+                "emptyset",
+                "oslash",
+                "Oslash",
+                "nothing",
+                "varnothing"
+            ],
+            "latex": "\\varnothing ",
+            "html": "&empty;"
+        }
+    ],
+    "vanillaSymbols": [
+        {
+            "aliases": [
+                "N",
+                "naturals",
+                "Naturals"
+            ],
+            "latex": "\\mathbb{N}",
+            "html": "&#8469;"
+        },
+        {
+            "aliases": [
+                "P",
+                "primes",
+                "Primes",
+                "projective",
+                "Projective",
+                "probability",
+                "Probability"
+            ],
+            "latex": "\\mathbb{P}",
+            "html": "&#8473;"
+        },
+        {
+            "aliases": [
+                "Z",
+                "integers",
+                "Integers"
+            ],
+            "latex": "\\mathbb{Z}",
+            "html": "&#8484;"
+        },
+        {
+            "aliases": [
+                "Q",
+                "rationals",
+                "Rationals"
+            ],
+            "latex": "\\mathbb{Q}",
+            "html": "&#8474;"
+        },
+        {
+            "aliases": [
+                "R",
+                "reals",
+                "Reals"
+            ],
+            "latex": "\\mathbb{R}",
+            "html": "&#8477;"
+        },
+        {
+            "aliases": [
+                "C",
+                "complex",
+                "Complex",
+                "complexes",
+                "Complexes",
+                "complexplane",
+                "Complexplane",
+                "ComplexPlane"
+            ],
+            "latex": "\\mathbb{C}",
+            "html": "&#8450;"
+        },
+        {
+            "aliases": [
+                "H",
+                "Hamiltonian",
+                "quaternions",
+                "Quaternions"
+            ],
+            "latex": "\\mathbb{H}",
+            "html": "&#8461;"
+        },
+        {
+            "aliases": [
+                "longleftarrow"
+            ],
+            "latex": "\\longleftarrow ",
+            "html": "&#8592;"
+        },
+        {
+            "aliases": [
+                "longrightarrow"
+            ],
+            "latex": "\\longrightarrow ",
+            "html": "&#8594;"
+        },
+        {
+            "aliases": [
+                "Longleftarrow"
+            ],
+            "latex": "\\Longleftarrow ",
+            "html": "&#8656;"
+        },
+        {
+            "aliases": [
+                "Longrightarrow"
+            ],
+            "latex": "\\Longrightarrow ",
+            "html": "&#8658;"
+        },
+        {
+            "aliases": [
+                "longleftrightarrow"
+            ],
+            "latex": "\\longleftrightarrow ",
+            "html": "&#8596;"
+        },
+        {
+            "aliases": [
+                "updownarrow"
+            ],
+            "latex": "\\updownarrow ",
+            "html": "&#8597;"
+        },
+        {
+            "aliases": [
+                "Longleftrightarrow"
+            ],
+            "latex": "\\Longleftrightarrow ",
+            "html": "&#8660;"
+        },
+        {
+            "aliases": [
+                "Updownarrow"
+            ],
+            "latex": "\\Updownarrow ",
+            "html": "&#8661;"
+        },
+        {
+            "aliases": [
+                "mapsto"
+            ],
+            "latex": "\\mapsto ",
+            "html": "&#8614;"
+        },
+        {
+            "aliases": [
+                "nearrow"
+            ],
+            "latex": "\\nearrow ",
+            "html": "&#8599;"
+        },
+        {
+            "aliases": [
+                "hookleftarrow"
+            ],
+            "latex": "\\hookleftarrow ",
+            "html": "&#8617;"
+        },
+        {
+            "aliases": [
+                "hookrightarrow"
+            ],
+            "latex": "\\hookrightarrow ",
+            "html": "&#8618;"
+        },
+        {
+            "aliases": [
+                "searrow"
+            ],
+            "latex": "\\searrow ",
+            "html": "&#8600;"
+        },
+        {
+            "aliases": [
+                "leftharpoonup"
+            ],
+            "latex": "\\leftharpoonup ",
+            "html": "&#8636;"
+        },
+        {
+            "aliases": [
+                "rightharpoonup"
+            ],
+            "latex": "\\rightharpoonup ",
+            "html": "&#8640;"
+        },
+        {
+            "aliases": [
+                "swarrow"
+            ],
+            "latex": "\\swarrow ",
+            "html": "&#8601;"
+        },
+        {
+            "aliases": [
+                "leftharpoondown"
+            ],
+            "latex": "\\leftharpoondown ",
+            "html": "&#8637;"
+        },
+        {
+            "aliases": [
+                "rightharpoondown"
+            ],
+            "latex": "\\rightharpoondown ",
+            "html": "&#8641;"
+        },
+        {
+            "aliases": [
+                "nwarrow"
+            ],
+            "latex": "\\nwarrow ",
+            "html": "&#8598;"
+        },
+        {
+            "aliases": [
+                "converges",
+                "darr",
+                "dnarr",
+                "dnarrow",
+                "downarrow"
+            ],
+            "latex": "\\downarrow ",
+            "html": "&darr;"
+        },
+        {
+            "aliases": [
+                "dArr",
+                "dnArr",
+                "dnArrow",
+                "Downarrow"
+            ],
+            "latex": "\\Downarrow ",
+            "html": "&dArr;"
+        },
+        {
+            "aliases": [
+                "diverges",
+                "uarr",
+                "uparrow"
+            ],
+            "latex": "\\uparrow ",
+            "html": "&uarr;"
+        },
+        {
+            "aliases": [
+                "uArr",
+                "Uparrow"
+            ],
+            "latex": "\\Uparrow ",
+            "html": "&uArr;"
+        },
+        {
+            "aliases": [
+                "rarr",
+                "rightarrow"
+            ],
+            "latex": "\\rightarrow ",
+            "html": "&rarr;"
+        },
+        {
+            "aliases": [
+                "rArr",
+                "Rightarrow"
+            ],
+            "latex": "\\Rightarrow ",
+            "html": "&rArr;"
+        },
+        {
+            "aliases": [
+                "larr",
+                "leftarrow"
+            ],
+            "latex": "\\leftarrow ",
+            "html": "&larr;"
+        },
+        {
+            "aliases": [
+                "lArr",
+                "Leftarrow"
+            ],
+            "latex": "\\Leftarrow ",
+            "html": "&lArr;"
+        },
+        {
+            "aliases": [
+                "harr",
+                "lrarr",
+                "leftrightarrow"
+            ],
+            "latex": "\\leftrightarrow ",
+            "html": "&harr;"
+        },
+        {
+            "aliases": [
+                "hArr",
+                "lrArr",
+                "Leftrightarrow"
+            ],
+            "latex": "\\Leftrightarrow ",
+            "html": "&hArr;"
+        },
+        {
+            "aliases": [
+                "diamond"
+            ],
+            "latex": "\\diamond ",
+            "html": "&#9671;"
+        },
+        {
+            "aliases": [
+                "bigtriangleup"
+            ],
+            "latex": "\\bigtriangleup ",
+            "html": "&#9651;"
+        },
+        {
+            "aliases": [
+                "ominus"
+            ],
+            "latex": "\\ominus ",
+            "html": "&#8854;"
+        },
+        {
+            "aliases": [
+                "uplus"
+            ],
+            "latex": "\\uplus ",
+            "html": "&#8846;"
+        },
+        {
+            "aliases": [
+                "bigtriangledown"
+            ],
+            "latex": "\\bigtriangledown ",
+            "html": "&#9661;"
+        },
+        {
+            "aliases": [
+                "sqcap"
+            ],
+            "latex": "\\sqcap ",
+            "html": "&#8851;"
+        },
+        {
+            "aliases": [
+                "triangleleft"
+            ],
+            "latex": "\\triangleleft ",
+            "html": "&#8882;"
+        },
+        {
+            "aliases": [
+                "sqcup"
+            ],
+            "latex": "\\sqcup ",
+            "html": "&#8852;"
+        },
+        {
+            "aliases": [
+                "triangleright"
+            ],
+            "latex": "\\triangleright ",
+            "html": "&#8883;"
+        },
+        {
+            "aliases": [
+                "odot",
+                "circledot"
+            ],
+            "latex": "\\odot ",
+            "html": "&#8857;"
+        },
+        {
+            "aliases": [
+                "bigcirc"
+            ],
+            "latex": "\\bigcirc ",
+            "html": "&#9711;"
+        },
+        {
+            "aliases": [
+                "dagger"
+            ],
+            "latex": "\\dagger ",
+            "html": "&#0134;"
+        },
+        {
+            "aliases": [
+                "ddagger"
+            ],
+            "latex": "\\ddagger ",
+            "html": "&#135;"
+        },
+        {
+            "aliases": [
+                "wr"
+            ],
+            "latex": "\\wr ",
+            "html": "&#8768;"
+        },
+        {
+            "aliases": [
+                "amalg"
+            ],
+            "latex": "\\amalg ",
+            "html": "&#8720;"
+        },
+        {
+            "aliases": [
+                "models"
+            ],
+            "latex": "\\models ",
+            "html": "&#8872;"
+        },
+        {
+            "aliases": [
+                "prec"
+            ],
+            "latex": "\\prec ",
+            "html": "&#8826;"
+        },
+        {
+            "aliases": [
+                "succ"
+            ],
+            "latex": "\\succ ",
+            "html": "&#8827;"
+        },
+        {
+            "aliases": [
+                "preceq"
+            ],
+            "latex": "\\preceq ",
+            "html": "&#8828;"
+        },
+        {
+            "aliases": [
+                "succeq"
+            ],
+            "latex": "\\succeq ",
+            "html": "&#8829;"
+        },
+        {
+            "aliases": [
+                "simeq"
+            ],
+            "latex": "\\simeq ",
+            "html": "&#8771;"
+        },
+        {
+            "aliases": [
+                "mid"
+            ],
+            "latex": "\\mid ",
+            "html": "&#8739;"
+        },
+        {
+            "aliases": [
+                "ll"
+            ],
+            "latex": "\\ll ",
+            "html": "&#8810;"
+        },
+        {
+            "aliases": [
+                "gg"
+            ],
+            "latex": "\\gg ",
+            "html": "&#8811;"
+        },
+        {
+            "aliases": [
+                "parallel"
+            ],
+            "latex": "\\parallel ",
+            "html": "&#8741;"
+        },
+        {
+            "aliases": [
+                "nparallel"
+            ],
+            "latex": "\\nparallel ",
+            "html": "&#8742;"
+        },
+        {
+            "aliases": [
+                "bowtie"
+            ],
+            "latex": "\\bowtie ",
+            "html": "&#8904;"
+        },
+        {
+            "aliases": [
+                "sqsubset"
+            ],
+            "latex": "\\sqsubset ",
+            "html": "&#8847;"
+        },
+        {
+            "aliases": [
+                "sqsupset"
+            ],
+            "latex": "\\sqsupset ",
+            "html": "&#8848;"
+        },
+        {
+            "aliases": [
+                "smile"
+            ],
+            "latex": "\\smile ",
+            "html": "&#8995;"
+        },
+        {
+            "aliases": [
+                "sqsubseteq"
+            ],
+            "latex": "\\sqsubseteq ",
+            "html": "&#8849;"
+        },
+        {
+            "aliases": [
+                "sqsupseteq"
+            ],
+            "latex": "\\sqsupseteq ",
+            "html": "&#8850;"
+        },
+        {
+            "aliases": [
+                "doteq"
+            ],
+            "latex": "\\doteq ",
+            "html": "&#8784;"
+        },
+        {
+            "aliases": [
+                "frown"
+            ],
+            "latex": "\\frown ",
+            "html": "&#8994;"
+        },
+        {
+            "aliases": [
+                "vdash"
+            ],
+            "latex": "\\vdash ",
+            "html": "&#8870;"
+        },
+        {
+            "aliases": [
+                "dashv"
+            ],
+            "latex": "\\dashv ",
+            "html": "&#8867;"
+        },
+        {
+            "aliases": [
+                "nless"
+            ],
+            "latex": "\\nless ",
+            "html": "&#8814;"
+        },
+        {
+            "aliases": [
+                "ngtr"
+            ],
+            "latex": "\\ngtr ",
+            "html": "&#8815;"
+        },
+        {
+            "aliases": [
+                "ldots"
+            ],
+            "latex": "\\ldots ",
+            "html": "&#8230;"
+        },
+        {
+            "aliases": [
+                "cdots"
+            ],
+            "latex": "\\cdots ",
+            "html": "&#8943;"
+        },
+        {
+            "aliases": [
+                "vdots"
+            ],
+            "latex": "\\vdots ",
+            "html": "&#8942;"
+        },
+        {
+            "aliases": [
+                "ddots"
+            ],
+            "latex": "\\ddots ",
+            "html": "&#8945;"
+        },
+        {
+            "aliases": [
+                "surd"
+            ],
+            "latex": "\\surd ",
+            "html": "&#8730;"
+        },
+        {
+            "aliases": [
+                "triangle"
+            ],
+            "latex": "\\triangle ",
+            "html": "&#9651;"
+        },
+        {
+            "aliases": [
+                "ell"
+            ],
+            "latex": "\\ell ",
+            "html": "&#8467;"
+        },
+        {
+            "aliases": [
+                "top"
+            ],
+            "latex": "\\top ",
+            "html": "&#8868;"
+        },
+        {
+            "aliases": [
+                "flat"
+            ],
+            "latex": "\\flat ",
+            "html": "&#9837;"
+        },
+        {
+            "aliases": [
+                "natural"
+            ],
+            "latex": "\\natural ",
+            "html": "&#9838;"
+        },
+        {
+            "aliases": [
+                "sharp"
+            ],
+            "latex": "\\sharp ",
+            "html": "&#9839;"
+        },
+        {
+            "aliases": [
+                "wp"
+            ],
+            "latex": "\\wp ",
+            "html": "&#8472;"
+        },
+        {
+            "aliases": [
+                "bot"
+            ],
+            "latex": "\\bot ",
+            "html": "&#8869;"
+        },
+        {
+            "aliases": [
+                "clubsuit"
+            ],
+            "latex": "\\clubsuit ",
+            "html": "&clubs;"
+        },
+        {
+            "aliases": [
+                "diamondsuit"
+            ],
+            "latex": "\\diamondsuit ",
+            "html": "&#9826;"
+        },
+        {
+            "aliases": [
+                "heartsuit"
+            ],
+            "latex": "\\heartsuit ",
+            "html": "&#9825;"
+        },
+        {
+            "aliases": [
+                "spadesuit"
+            ],
+            "latex": "\\spadesuit ",
+            "html": "&#9824;"
+        },
+        {
+            "aliases": [
+                "parallelogram"
+            ],
+            "latex": "\\parallelogram ",
+            "html": "&#9649;"
+        },
+        {
+            "aliases": [
+                "square"
+            ],
+            "latex": "\\square ",
+            "html": "&#11036;"
+        },
+        {
+            "aliases": [
+                "oint"
+            ],
+            "latex": "\\oint ",
+            "html": "&#8750;"
+        },
+        {
+            "aliases": [
+                "bigcap"
+            ],
+            "latex": "\\bigcap ",
+            "html": "&#8745;"
+        },
+        {
+            "aliases": [
+                "bigcup"
+            ],
+            "latex": "\\bigcup ",
+            "html": "&#8746;"
+        },
+        {
+            "aliases": [
+                "bigsqcup"
+            ],
+            "latex": "\\bigsqcup ",
+            "html": "&#8852;"
+        },
+        {
+            "aliases": [
+                "bigvee"
+            ],
+            "latex": "\\bigvee ",
+            "html": "&#8744;"
+        },
+        {
+            "aliases": [
+                "bigwedge"
+            ],
+            "latex": "\\bigwedge ",
+            "html": "&#8743;"
+        },
+        {
+            "aliases": [
+                "bigodot"
+            ],
+            "latex": "\\bigodot ",
+            "html": "&#8857;"
+        },
+        {
+            "aliases": [
+                "bigotimes"
+            ],
+            "latex": "\\bigotimes ",
+            "html": "&#8855;"
+        },
+        {
+            "aliases": [
+                "bigoplus"
+            ],
+            "latex": "\\bigoplus ",
+            "html": "&#8853;"
+        },
+        {
+            "aliases": [
+                "biguplus"
+            ],
+            "latex": "\\biguplus ",
+            "html": "&#8846;"
+        },
+        {
+            "aliases": [
+                "lfloor"
+            ],
+            "latex": "\\lfloor ",
+            "html": "&#8970;"
+        },
+        {
+            "aliases": [
+                "rfloor"
+            ],
+            "latex": "\\rfloor ",
+            "html": "&#8971;"
+        },
+        {
+            "aliases": [
+                "lceil"
+            ],
+            "latex": "\\lceil ",
+            "html": "&#8968;"
+        },
+        {
+            "aliases": [
+                "rceil"
+            ],
+            "latex": "\\rceil ",
+            "html": "&#8969;"
+        },
+        {
+            "aliases": [
+                "opencurlybrace",
+                "lbrace"
+            ],
+            "latex": "\\lbrace ",
+            "html": "{"
+        },
+        {
+            "aliases": [
+                "closecurlybrace",
+                "rbrace"
+            ],
+            "latex": "\\rbrace ",
+            "html": "}"
+        },
+        {
+            "aliases": [
+                "lbrack"
+            ],
+            "latex": "[",
+            "html": "["
+        },
+        {
+            "aliases": [
+                "rbrack"
+            ],
+            "latex": "]",
+            "html": "]"
+        },
+        {
+            "aliases": [
+                "slash"
+            ],
+            "latex": "/",
+            "html": "/"
+        },
+        {
+            "aliases": [
+                "vert"
+            ],
+            "latex": "|",
+            "html": "|"
+        },
+        {
+            "aliases": [
+                "perp",
+                "perpendicular"
+            ],
+            "latex": "\\perp ",
+            "html": "&perp;"
+        },
+        {
+            "aliases": [
+                "nabla",
+                "del"
+            ],
+            "latex": "\\nabla ",
+            "html": "&nabla;"
+        },
+        {
+            "aliases": [
+                "hbar"
+            ],
+            "latex": "\\hbar ",
+            "html": "&#8463;"
+        },
+        {
+            "aliases": [
+                "AA",
+                "Angstrom",
+                "angstrom"
+            ],
+            "latex": "\\text\\AA ",
+            "html": "&#8491;"
+        },
+        {
+            "aliases": [
+                "ring",
+                "circ",
+                "circle"
+            ],
+            "latex": "\\circ ",
+            "html": "&#8728;"
+        },
+        {
+            "aliases": [
+                "bull",
+                "bullet"
+            ],
+            "latex": "\\bullet ",
+            "html": "&bull;"
+        },
+        {
+            "aliases": [
+                "setminus",
+                "smallsetminus"
+            ],
+            "latex": "\\setminus ",
+            "html": "&#8726;"
+        },
+        {
+            "aliases": [
+                "not",
+                "¬",
+                "neg"
+            ],
+            "latex": "\\neg ",
+            "html": "&not;"
+        },
+        {
+            "aliases": [
+                "…",
+                "dots",
+                "ellip",
+                "hellip",
+                "ellipsis",
+                "hellipsis"
+            ],
+            "latex": "\\dots ",
+            "html": "&hellip;"
+        },
+        {
+            "aliases": [
+                "Re",
+                "Real",
+                "real"
+            ],
+            "latex": "\\Re ",
+            "html": "&real;"
+        },
+        {
+            "aliases": [
+                "Im",
+                "imag",
+                "image",
+                "imagin",
+                "imaginary",
+                "Imaginary"
+            ],
+            "latex": "\\Im ",
+            "html": "&image;"
+        },
+        {
+            "aliases": [
+                "part",
+                "partial"
+            ],
+            "latex": "\\partial ",
+            "html": "&part;"
+        },
+        {
+            "aliases": [
+                "pounds"
+            ],
+            "latex": "\\pounds ",
+            "html": "&pound;"
+        },
+        {
+            "aliases": [
+                "alef",
+                "alefsym",
+                "aleph",
+                "alephsym"
+            ],
+            "latex": "\\aleph ",
+            "html": "&alefsym;"
+        },
+        {
+            "aliases": [
+                "xist",
+                "xists",
+                "exist",
+                "exists"
+            ],
+            "latex": "\\exists ",
+            "html": "&exist;"
+        },
+        {
+            "aliases": [
+                "nexists",
+                "nexist"
+            ],
+            "latex": "\\nexists ",
+            "html": "&#8708;"
+        },
+        {
+            "aliases": [
+                "deg",
+                "degree"
+            ],
+            "latex": "\\degree ",
+            "html": "&deg;"
+        },
+        {
+            "aliases": [
+                "ang",
+                "angle"
+            ],
+            "latex": "\\angle ",
+            "html": "&ang;"
+        },
+        {
+            "aliases": [
+                "measuredangle"
+            ],
+            "latex": "\\measuredangle ",
+            "html": "&#8737;"
+        },
+        {
+            "aliases": [
+                "quad",
+                "emsp"
+            ],
+            "latex": "\\quad ",
+            "html": "    "
+        },
+        {
+            "aliases": [
+                "qquad"
+            ],
+            "latex": "\\qquad ",
+            "html": "        "
+        }
+    ]
+}

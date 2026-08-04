@@ -714,15 +714,9 @@ LatexCmds.f = class extends Letter {
 }
 
 // VanillaSymbol's
-LatexCmds[' '] = LatexCmds.space = () =>
-    new DigitGroupingChar('\\ ', h('span', {}, [h.text(U_NO_BREAK_SPACE)]), ' ')
+LatexCmds[' '] = LatexCmds.space = () => new DigitGroupingChar('\\ ', h('span', {}, [h.text(U_NO_BREAK_SPACE)]))
 
-LatexCmds['.'] = () =>
-    new DigitGroupingChar(
-        '.',
-        h('span', { class: 'mq-digit' }, [h.text('.')]),
-        '.'
-    )
+LatexCmds['.'] = () => new DigitGroupingChar('.', h('span', { class: 'mq-digit' }, [h.text('.')]))
 
 LatexCmds["'"] = LatexCmds.prime = bindVanillaSymbol("'", '&prime;')
 LatexCmds['″'] = LatexCmds.dprime = bindVanillaSymbol('″', '&Prime;')
@@ -864,8 +858,7 @@ LatexCmds.Upsilon = //LaTeX
     () =>
         new MQSymbol(
             '\\Upsilon ',
-            h('var', { style: 'font-family: serif' }, [h.entityText('&upsih;')]),
-            'capital upsilon'
+            h('var', { style: 'font-family: serif' }, [h.entityText('&upsih;')])
         ); //Symbola's 'upsilon with a hook' is a capital Y without hooks :(
 
 //other symbols with the same LaTeX command and HTML character entity reference
@@ -1016,7 +1009,7 @@ function isBinaryOperator(node: NodeRef): boolean {
 
 class PlusMinus extends BinaryOperator {
     constructor(ch?: string, html?: ChildNode) {
-        super(ch, html, undefined, true)
+        super(ch, html, true)
     }
 
     contactWeld(cursor: Cursor, dir?: Direction) {
@@ -1066,11 +1059,11 @@ LatexCmds.mp =
 CharCmds['*'] =
     LatexCmds.sdot =
     LatexCmds.cdot =
-    bindBinaryOperator('\\cdot ', '&middot;', '*'); //semantically should be &sdot;, but &middot; looks better
+    bindBinaryOperator('\\cdot ', '&middot;'); //semantically should be &sdot;, but &middot; looks better
 
 class To extends BinaryOperator {
     constructor() {
-        super('\\to ', h.entityText('&rarr;'), 'to')
+        super('\\to ', h.entityText('&rarr;'))
     }
     deleteTowards(dir: Direction, cursor: Cursor) {
         if (dir === L) {
@@ -1099,8 +1092,7 @@ class Inequality extends BinaryOperator {
         const strictness: '' | 'Strict' = strict ? 'Strict' : ''
         super(
             data[`ctrlSeq${strictness}`],
-            h.entityText(data[`htmlEntity${strictness}`]),
-            data[`text${strictness}`]
+            h.entityText(data[`htmlEntity${strictness}`])
         )
 
         this.data = data
@@ -1185,11 +1177,11 @@ LatexCmds.infty =
 LatexCmds['≠'] =
     LatexCmds.ne =
     LatexCmds.neq =
-    bindBinaryOperator('\\ne ', '&ne;', 'not equal')
+    bindBinaryOperator('\\ne ', '&ne;')
 
 class Equality extends BinaryOperator {
     constructor() {
-        super('=', h.text('='), '=')
+        super('=', h.text('='))
     }
     createLeftOf(cursor: Cursor) {
         const cursorL = cursor[L]
@@ -1209,19 +1201,18 @@ LatexCmds['='] = Equality
 
 LatexCmds['×'] = LatexCmds.times = bindBinaryOperator(
     '\\times ',
-    '&times;',
-    '[x]'
+    '&times;'
 )
 
 LatexCmds['÷'] =
     LatexCmds.div =
     LatexCmds.divide =
     LatexCmds.divides =
-    bindBinaryOperator('\\div ', '&divide;', '[/]')
+    bindBinaryOperator('\\div ', '&divide;')
 
 class Sim extends BinaryOperator {
     constructor() {
-        super('\\sim ', h.text('~'), '~')
+        super('\\sim ', h.text('~'))
     }
     createLeftOf(cursor: Cursor) {
         if (cursor[L] instanceof Sim) {
@@ -1242,7 +1233,7 @@ class Sim extends BinaryOperator {
 
 class Approx extends BinaryOperator {
     constructor() {
-        super('\\approx ', h.entityText('&approx;'), '≈')
+        super('\\approx ', h.entityText('&approx;'))
     }
     deleteTowards(dir: Direction, cursor: Cursor) {
         if (dir === L) {

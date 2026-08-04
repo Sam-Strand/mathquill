@@ -22,35 +22,31 @@ export class TempSingleCharNode extends MQNode {
 
 export const latexMathParser = (function () {
     function commandToBlock(cmd: MQNode | Fragment): MathBlock {
-        var block = new MathBlock()
+        const block = new MathBlock()
         cmd.adopt(block, 0, 0)
         return block
     }
     function joinBlocks(blocks: MathBlock[]) {
-        var firstBlock = blocks[0] || new MathBlock()
+        const firstBlock = blocks[0] || new MathBlock()
         for (var i = 1; i < blocks.length; i += 1) {
             blocks[i].children().adopt(firstBlock, firstBlock.getEnd(R), 0)
         }
         return firstBlock
     }
 
-    var string = Parser.string
-    var regex = Parser.regex
-    var letter = Parser.letter
-    var digit = Parser.digit
-    var any = Parser.any
-    var optWhitespace = Parser.optWhitespace
-    var succeed = Parser.succeed
-    var fail = Parser.fail
+    const string = Parser.string
+    const regex = Parser.regex
+    const optWhitespace = Parser.optWhitespace
+    const fail = Parser.fail
 
-    var variable = letter.map(function (c) { return new Letter(c) })
-    var number = digit.map(function (c) { return new Digit(c) })
-    var symbol = regex(/^[^${}\\_^]/).map(function (c) { return new VanillaSymbol(c) })
+    const variable = Parser.letter.map((c) => { return new Letter(c) })
+    const number = Parser.digit.map((c) => { return new Digit(c) })
+    const symbol = regex(/^[^${}\\_^]/).map((c) => { return new VanillaSymbol(c) })
 
-    var controlSequence = regex(/^[^\\a-eg-zA-Z]/)
+    const controlSequence = regex(/^[^\\a-eg-zA-Z]/)
         .or(
             string('\\').then(
-                regex(/^[a-z]+/i).or(regex(/^\s+/).result(' ')).or(any)
+                regex(/^[a-z]+/i).or(regex(/^\s+/).result(' ')).or(Parser.any)
             )
         )
         .then(function (ctrlSeq) {
@@ -64,19 +60,19 @@ export const latexMathParser = (function () {
             return fail('unknown command: \\' + ctrlSeq)
         })
 
-    var command = controlSequence.or(variable).or(number).or(symbol)
+    const command = controlSequence.or(variable).or(number).or(symbol)
 
-    var mathGroup: Parser<MathBlock> = string('{').then(function () { return mathSequence }).skip(string('}'))
-    var mathBlock = optWhitespace.then(mathGroup.or(command.map(commandToBlock)))
-    var mathSequence = mathBlock.many().map(joinBlocks).skip(optWhitespace)
+    const mathGroup: Parser<MathBlock> = string('{').then(function () { return mathSequence }).skip(string('}'))
+    const mathBlock = optWhitespace.then(mathGroup.or(command.map(commandToBlock)))
+    const mathSequence = mathBlock.many().map(joinBlocks).skip(optWhitespace)
 
-    var optMathBlock = string('[').then(
+    const optMathBlock = string('[').then(
         mathBlock.then(function (block) {
-            return block.join('latex') !== ']' ? succeed(block) : fail('')
+            return block.join('latex') !== ']' ? Parser.succeed(block) : fail('')
         }).many().map(joinBlocks).skip(optWhitespace)
     ).skip(string(']'))
 
-    var latexMath: typeof mathSequence & { block: typeof mathBlock; optBlock: typeof optMathBlock } = mathSequence as any
+    const latexMath: typeof mathSequence & { block: typeof mathBlock; optBlock: typeof optMathBlock } = mathSequence as any
     latexMath.block = mathBlock
     latexMath.optBlock = optMathBlock
     return latexMath

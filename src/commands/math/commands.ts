@@ -23,6 +23,8 @@ import { Parser } from '../../services/parser.util'
 import { latexMathParser } from '../../services/latexParser'
 import { Letter, Digit, Equality } from './basicSymbols'
 
+import './advancedSymbols'
+
 var SVG_SYMBOLS = {
     sqrt: {
         width: '',
@@ -732,8 +734,7 @@ LatexCmds.ans = AnsBuilder
 const PercentOfBuilder = () =>
     new MQSymbol(
         '\\%\\operatorname{of}',
-        h('span', { class: 'mq-nonSymbola mq-operator-name' }, [h.text('% of ')]),
-        'percent of'
+        h('span', { class: 'mq-nonSymbola mq-operator-name' }, [h.text('% of ')])
     )
 LatexCmds.percent = LatexCmds.percentof = PercentOfBuilder
 
@@ -747,7 +748,6 @@ class SquareRoot extends MathCommand {
             h.block('span', { class: 'mq-non-leaf mq-sqrt-stem' }, blocks[0]),
         ])
     )
-    textTemplate = ['sqrt(', ')']
     parser() {
         return latexMathParser.optBlock
             .then(function (optBlock) {

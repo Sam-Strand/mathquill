@@ -4,7 +4,7 @@ import type { Controller } from '../../services/textarea'
 import type { Options } from '../../options'
 import type { Cursor, Anticursor } from '../../cursor'
 
-import { NodeBase, MQNode, Fragment  } from '../../tree'
+import { NodeBase, MQNode, Fragment } from '../../tree'
 import { L, R } from '../../types'
 import { h } from '../../dom'
 import { getBoundingClientRect } from '../../browser'
@@ -101,9 +101,9 @@ export class MathCommand extends MathElement {
     domView: DOMView
     declare ends: Ends<MQNode>
 
-    constructor(ctrlSeq?: string, domView?: DOMView, textTemplate?: string[]) {
+    constructor(ctrlSeq?: string, domView?: DOMView) {
         super()
-        this.setCtrlSeqHtmlAndText(ctrlSeq, domView, textTemplate)
+        this.setCtrlSeqHtmlAndText(ctrlSeq, domView)
     }
 
     setEnds(ends: Ends<MQNode>) {
@@ -116,12 +116,10 @@ export class MathCommand extends MathElement {
 
     setCtrlSeqHtmlAndText(
         ctrlSeq?: string,
-        domView?: DOMView,
-        textTemplate?: string[]
+        domView?: DOMView
     ) {
         if (!this.ctrlSeq) this.ctrlSeq = ctrlSeq
         if (domView) this.domView = domView
-        if (textTemplate) this.textTemplate = textTemplate
     }
 
     // obvious methods
@@ -129,7 +127,7 @@ export class MathCommand extends MathElement {
         replacedFragment.disown()
         this.replacedFragment = replacedFragment
     }
-    
+
     isEmpty() {
         return this.foldChildren(true, function (isEmpty, child) {
             return isEmpty && child.isEmpty()
@@ -308,29 +306,19 @@ export class MathCommand extends MathElement {
 export class MQSymbol extends MathCommand {
     constructor(
         ctrlSeq?: string,
-        html?: HTMLElement,
-        text?: string
+        html?: HTMLElement
     ) {
         super()
         this.setCtrlSeqHtmlText(
             ctrlSeq,
             html
                 ? new DOMView(0, () => html.cloneNode(true) as HTMLElement)
-                : undefined,
-            text
+                : undefined
         )
     }
 
-    setCtrlSeqHtmlText(
-        ctrlSeq?: string,
-        html?: DOMView,
-        text?: string
-    ) {
-        if (!text && !!ctrlSeq) {
-            text = ctrlSeq.replace(/^\\/, '')
-        }
-
-        super.setCtrlSeqHtmlAndText(ctrlSeq, html, [text || ''])
+    setCtrlSeqHtmlText(ctrlSeq?: string, html?: DOMView) {
+        super.setCtrlSeqHtmlAndText(ctrlSeq, html)
     }
 
     parser(): Parser<MQNode | Fragment> {
@@ -386,7 +374,6 @@ export class BinaryOperator extends MQSymbol {
     constructor(
         ctrlSeq?: string,
         html?: ChildNode,
-        text?: string,
         treatLikeSymbol?: boolean
     ) {
         if (treatLikeSymbol) {
@@ -398,8 +385,7 @@ export class BinaryOperator extends MQSymbol {
         } else {
             super(
                 ctrlSeq,
-                h('span', { class: 'mq-binary-operator' }, html ? [html] : []),
-                text
+                h('span', { class: 'mq-binary-operator' }, html ? [html] : [])
             )
         }
     }
@@ -418,14 +404,12 @@ export function bindVanillaSymbol(
 
 export function bindBinaryOperator(
     ctrlSeq?: string,
-    htmlEntity?: string,
-    text?: string
+    htmlEntity?: string
 ) {
     return () =>
         new BinaryOperator(
             ctrlSeq,
-            htmlEntity ? h.entityText(htmlEntity) : undefined,
-            text
+            htmlEntity ? h.entityText(htmlEntity) : undefined
         )
 }
 
@@ -543,4 +527,4 @@ export class MathBlock extends MathElement {
     }
 }
 
-export class RootMathBlock extends MathBlock {}
+export class RootMathBlock extends MathBlock { }

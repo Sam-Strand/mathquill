@@ -144,7 +144,7 @@ class Controller_keystroke extends Controller_focusBlur {
         return self
     }
     deleteDir(dir: Direction) {
-        var cursor = this.cursor
+        const cursor = this.cursor
         var hadSelection = cursor.selection
         this.notify('edit'); // deletes selection if present
         if (!hadSelection) {
@@ -165,7 +165,7 @@ class Controller_keystroke extends Controller_focusBlur {
         return this
     }
     ctrlDeleteDir(dir: Direction) {
-        var cursor = this.cursor
+        const cursor = this.cursor
         if (!cursor[dir] || cursor.selection) return this.deleteDir(dir)
 
         this.notify('edit')

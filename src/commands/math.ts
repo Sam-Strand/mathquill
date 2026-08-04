@@ -14,28 +14,36 @@ import { Letter, Digit } from './math/basicSymbols'
 import { MathBlock, RootMathBlock, MathCommand, VanillaSymbol } from './math/core'
 
 MathBlock.prototype.chToCmd = function (ch: string, options: Options) {
-    var cons
-    // exclude f because it gets a dedicated command with more spacing
     if (ch.match(/^[a-eg-zA-Z]$/)) return new Letter(ch)
-    else if (/^\d$/.test(ch)) return new Digit(ch)
-    else if (options && options.typingSlashWritesDivisionSymbol && ch === '/')
-        return (LatexCmds as LatexCmdsSingleCharBuilder)['÷'](ch)
-    else if (options && options.typingAsteriskWritesTimesSymbol && ch === '*')
-        return (LatexCmds as LatexCmdsSingleCharBuilder)['×'](ch)
-    else if (options && options.typingPercentWritesPercentOf && ch === '%')
-        return (LatexCmds as LatexCmdsSingleCharBuilder).percentof(ch)
-    else if (
-        (cons = (CharCmds as CharCmdsAny)[ch] || (LatexCmds as LatexCmdsAny)[ch])
-    ) {
-        if (isMQNodeClass(cons)) {
-            return new (cons as any)(ch)
-        }
-        return cons(ch)
-    } else return new VanillaSymbol(ch)
+    if (/^\d$/.test(ch)) return new Digit(ch)
+
+    const specialHandlers: Record<string, (ch: string) => MQNode | undefined> = {
+        '/': (ch) => options?.typingSlashWritesDivisionSymbol 
+            ? (LatexCmds as LatexCmdsSingleCharBuilder)['÷'](ch) 
+            : undefined,
+        '*': (ch) => options?.typingAsteriskWritesTimesSymbol
+            ? (LatexCmds as LatexCmdsSingleCharBuilder)['×'](ch)
+            : undefined,
+        '%': (ch) => options?.typingPercentWritesPercentOf
+            ? (LatexCmds as LatexCmdsSingleCharBuilder).percentof(ch)
+            : undefined
+    }
+
+    const specialResult = specialHandlers[ch]?.(ch)
+    if (specialResult) return specialResult
+
+    const commandClass = (CharCmds as CharCmdsAny)[ch] || (LatexCmds as LatexCmdsAny)[ch]
+    if (commandClass) {
+        return isMQNodeClass(commandClass)
+            ? new (commandClass as any)(ch)
+            : commandClass(ch)
+    }
+
+    return new VanillaSymbol(ch)
 }
 
 MathBlock.prototype.write = function (cursor: Cursor, ch: string) {
-    var cmd = this.chToCmd(ch, cursor.options)
+    const cmd = this.chToCmd(ch, cursor.options)
     if (cursor.selection) cmd.replaces(cursor.replaceSelection())
     if (!cursor.isTooDeep()) {
         cmd.createLeftOf(cursor.show())
@@ -43,12 +51,9 @@ MathBlock.prototype.write = function (cursor: Cursor, ch: string) {
 }
 
 MathBlock.prototype.writeLatex = function (cursor: Cursor, latex: string) {
-    var all = Parser.all
-    var eof = Parser.eof
-
-    var block = latexMathParser
-        .skip(eof)
-        .or(all.result<false>(false))
+    const block = latexMathParser
+        .skip(Parser.eof)
+        .or(Parser.all.result<false>(false))
         .parse(latex)
 
     if (block && !block.isEmpty() && block.prepareInsertionAt(cursor)) {
@@ -69,20 +74,19 @@ MathBlock.prototype.writeLatex = function (cursor: Cursor, latex: string) {
             return undefined
         })
     }
-};
+}
 
-;(MathCommand.prototype as any).parser = function (this: MathCommand): Parser<MQNode | Fragment> {
-        var block = latexMathParser.block;
-        return block.times(this.numBlocks()).map((blocks) => {
-            this.blocks = blocks;
-            for (var i = 0; i < blocks.length; i += 1) {
-                blocks[i].adopt(this, this.getEnd(R), 0);
-            }
-            return this;
-        });
-    };
+MathCommand.prototype.parser = function (this: MathCommand): Parser<MQNode | Fragment> {
+    return latexMathParser.block.times(this.numBlocks()).map((blocks) => {
+        this.blocks = blocks
+        for (var i = 0; i < blocks.length; i += 1) {
+            blocks[i].adopt(this, this.getEnd(R), 0)
+        }
+        return this
+    })
+}
 
-RootBlockMixin(RootMathBlock.prototype); // adds methods to RootMathBlock
+RootBlockMixin(RootMathBlock.prototype) // adds methods to RootMathBlock
 
 export {
     MathBlock,

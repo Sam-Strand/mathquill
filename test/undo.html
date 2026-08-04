@@ -59,7 +59,7 @@
 
         document.addEventListener('keydown', (e) => {
             // Ctrl+Z - Undo
-            if (e.code === 'KeyZ' && e.ctrlKey && !e.shiftKey) {
+            if (e.code === 'KeyZ' && e.ctrlKey) {
                 e.preventDefault()
                 if (historyIndex > 0) {
                     applyHistoryState(historyIndex - 1)

@@ -1,38 +1,47 @@
 {
-  "name": "mathquill",
-  "description": "Easily type math in your webapp",
-  "version": "0.11.0",
-  "license": "MPL-2.0",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Sam-Strand/mathquill.git"
-  },
-  "type": "module",
-  "exports": {
-    ".": {
-      "development": "./src/index.ts",
-      "import": "./dist/mathquill.js",
-      "types": "./dist/index.d.ts"
+    "name": "mathquill",
+    "description": "Easily type math in your webapp",
+    "version": "0.11.0",
+    "license": "MPL-2.0",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build"
     },
-    "./mathquill.css": {
-      "development": "./src/styles/main.scss",
-      "import": "./dist/mathquill.css"
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Sam-Strand/mathquill.git"
     },
-    "./fonts/*": {
-      "development": "./src/fonts/*",
-      "import": "./src/fonts/*"
+    "type": "module",
+    "exports": {
+        ".": {
+            "development": "./src/index.ts",
+            "import": "./dist/mathquill.js",
+            "types": "./dist/index.d.ts"
+        },
+        "./mathquill.css": {
+            "development": "./src/styles/main.scss",
+            "import": "./dist/mathquill.css"
+        },
+        "./fonts/*": {
+            "development": "./src/fonts/*",
+            "import": "./src/fonts/*"
+        },
+        "./vue": {
+            "development": "./src/vue/index.ts",
+            "import": "./dist/vue.js"
+        }
+    },
+    "devDependencies": {
+        "@vitejs/plugin-vue": "^6.0.7",
+        "@vue/language-core": "3.3.5",
+        "@types/mocha": "^5.2.7",
+        "mocha": ">=2.4.1",
+        "sass": "^1.101.0",
+        "typescript": "^6.0.3",
+        "vite": "^8.1.0",
+        "vite-plugin-dts": "^5.0.2"
+    },
+    "peerDependencies": {
+        "vue": "^3.0.0"
     }
-  },
-  "devDependencies": {
-    "@types/mocha": "^5.2.7",
-    "mocha": ">=2.4.1",
-    "sass": "^1.101.0",
-    "typescript": "^6.0.3",
-    "vite": "^8.1.0",
-    "vite-plugin-dts": "^5.0.2"
-  }
 }

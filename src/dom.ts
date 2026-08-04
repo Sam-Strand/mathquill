@@ -119,7 +119,7 @@ function closest(el: unknown | null, s: string) {
         (Element.prototype as any).msMatchesSelector ||
         Element.prototype.webkitMatchesSelector
 
-    var match: ParentNode | null = el
+    let match: ParentNode | null = el
     do {
         if (matches.call(match, s)) return match
         match = match?.parentElement ?? match?.parentNode ?? null

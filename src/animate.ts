@@ -23,56 +23,56 @@
  * to keep its implementation simple because it isn't used very widely
  * in the project.
  */
+let rafShim: (cb: () => void) => number,
+    cancelShim: (token: number) => void
+if (
+    typeof requestAnimationFrame === 'function' &&
+    typeof cancelAnimationFrame === 'function'
+) {
+    rafShim = requestAnimationFrame
+    cancelShim = cancelAnimationFrame
+} else {
+    rafShim = (cb: () => void) => setTimeout(cb, 13)
+    cancelShim = clearTimeout
+}
 
-const animate = (function () {
-    // IIFE exists just to hang on to configured rafShim and cancelShim
-    // functions
-    let rafShim: (cb: () => void) => number, cancelShim: (token: number) => void
-    if (
-        typeof requestAnimationFrame === 'function' &&
-        typeof cancelAnimationFrame === 'function'
-    ) {
-        rafShim = requestAnimationFrame
-        cancelShim = cancelAnimationFrame
-    } else {
-        rafShim = (cb: () => void) => setTimeout(cb, 13)
-        cancelShim = clearTimeout
+function animate(
+    duration: number,
+    cb: (
+        progress: number,
+        scheduleNext: () => void,
+        cancel: () => void
+    ) => void
+) {
+    let start = Date.now()
+    let cancelToken: number | undefined
+    let progress = 0
+    function step() {
+        const proposedProgress = (Date.now() - start) / duration
+
+        // Enforce that progress is strictly monotonic
+        if (proposedProgress <= progress) {
+            scheduleNext()
+        } else {
+            progress = proposedProgress
+        }
+
+        cb(progress, scheduleNext, cancel)
     }
-
-    return function (
-        duration: number,
-        cb: (progress: number, scheduleNext: () => void, cancel: () => void) => void
-    ) {
-        let start = Date.now()
-        let cancelToken: number | undefined
-        let progress = 0
-        function step() {
-            const proposedProgress = (Date.now() - start) / duration
-
-            // Enforce that progress is strictly monotonic
-            if (proposedProgress <= progress) {
-                scheduleNext()
-            } else {
-                progress = proposedProgress
-            }
-
-            cb(progress, scheduleNext, cancel)
-        }
-        function cancel() {
-            if (cancelToken !== undefined) cancelShim(cancelToken)
-            cancelToken = undefined
-        }
-        function scheduleNext() {
-            // Calling cancel here ensures that there are never multiple
-            // concurrent callbacks scheduled for a single animation, even if
-            // the caller calls `scheduleNext` multiple times in a single
-            // event loop (which is always a mistake)
-            cancel()
-            cancelToken = rafShim(step)
-        }
-        cb(duration <= 0 ? 1 : 0, scheduleNext, cancel)
+    function cancel() {
+        if (cancelToken !== undefined) cancelShim(cancelToken)
+        cancelToken = undefined
     }
-})()
+    function scheduleNext() {
+        // Calling cancel here ensures that there are never multiple
+        // concurrent callbacks scheduled for a single animation, even if
+        // the caller calls `scheduleNext` multiple times in a single
+        // event loop (which is always a mistake)
+        cancel()
+        cancelToken = rafShim(step)
+    }
+    cb(duration <= 0 ? 1 : 0, scheduleNext, cancel)
+}
 
 export {
     animate

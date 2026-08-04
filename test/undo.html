@@ -3,34 +3,75 @@
 
 <head>
     <title>MathQuill Undo Test Page</title>
-    <link rel="stylesheet" type="text/css" href="../build/mathquill.css" />
 </head>
 
 <body>
     <p>Editable math field: <span id="math-field">x^2</span></p>
     <p>LaTeX of what you typed: <code id="latex">x^2</code></p>
 
-    <script src="../build/mathquill.js"></script>
-    <script>
-        var mathFieldSpan = document.getElementById('math-field')
-        var latexSpan = document.getElementById('latex')
-        var previousLatex = ''
+    <script type="module">
+        import MathQuill from 'mathquill'
+        import 'mathquill/mathquill.css'
 
-        var MQ = MathQuill.getInterface(3); // keeps the API stable
+        const mathFieldSpan = document.getElementById('math-field')
+        const latexSpan = document.getElementById('latex')
 
-        // you may pass in an options object:
-        var mathField = MQ.MathField(mathFieldSpan, {
+        let isRestoring = false
+
+        const mathField = MathQuill.MathField(mathFieldSpan, {
             handlers: {
                 edit: function () {
-                    previousLatex = latexSpan.textContent
-                    latexSpan.textContent = mathField.latex()
+                    if (isRestoring) return
+
+                    const currentLatex = mathField.latex()
+                    latexSpan.textContent = currentLatex
+
+                    if (historyIndex < history.length - 1) {
+                        history.splice(historyIndex + 1)
+                    }
+
+                    history.push(currentLatex)
+
+                    // Ограничиваем размер истории
+                    if (history.length > MAX_HISTORY) {
+                        history.shift()
+                    }
+
+                    historyIndex = history.length - 1
                 },
             },
         })
 
+        const history = ['']
+        let historyIndex = 0
+        const MAX_HISTORY = 100
+
+        function applyHistoryState(index) {
+            if (index >= 0 && index < history.length) {
+                isRestoring = true
+                historyIndex = index
+                const latex = history[historyIndex]
+                mathField.latex(latex)
+                latexSpan.textContent = latex
+                isRestoring = false
+            }
+        }
+
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'z' && e.metaKey) {
-                mathField.latex(previousLatex)
+            // Ctrl+Z - Undo
+            if (e.code === 'KeyZ' && e.ctrlKey && !e.shiftKey) {
+                e.preventDefault()
+                if (historyIndex > 0) {
+                    applyHistoryState(historyIndex - 1)
+                }
+            }
+
+            // Ctrl+Y
+            if (e.code === 'KeyY' && e.ctrlKey) {
+                e.preventDefault()
+                if (historyIndex < history.length - 1) {
+                    applyHistoryState(historyIndex + 1)
+                }
             }
         })
     </script>

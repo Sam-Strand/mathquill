@@ -3,13 +3,11 @@ import type { Direction } from './types'
 import type { HandlerOptions, LatexCmdsAny, ControllerData, ControllerRoot, ConfigOptions, BaseMathQuill, EditableMathQuill, EmbedOptionsData, EmbedOptions } from './shared_types'
 import type { AutoDict } from './options'
 
-import './staticMath'
-import './mathField'
-import './innerMathField'
+import './API'
 import './commands/math'
 
 import { L, R, } from './types'
-import { NodeBase, LatexCmds } from './tree'
+import { NodeBase } from './tree'
 import { domFrag } from './domFragment'
 import { h } from './dom'
 import { MathBlock } from './commands/math/core'
@@ -17,7 +15,7 @@ import { getScrollX, getScrollY } from './browser'
 import { Controller } from './services/textarea'
 import { EmbedNode } from './commands/math/commands'
 import { Options, baseOptionProcessors } from './options'
-import { API, EMBEDS } from './registry'
+import { API, EMBEDS, LatexCmds } from './registry'
 
 type KIND_OF_MQ = 'StaticMath' | 'MathField' | 'InnerMathField' | 'TextField'
 
@@ -28,7 +26,7 @@ interface InternalMathQuillInstance {
     id: number
     data: { [key: string]: any }
     mathquillify(classNames: string): void
-    __mathquillify(opts: ConfigOptions, _interfaceVersion: number): IBaseMathQuill
+    __mathquillify(opts: ConfigOptions): IBaseMathQuill
     config(opts: ConfigOptions): IBaseMathQuill
 }
 
@@ -57,8 +55,6 @@ class Progenote {}
 
 // ============ MathQuill API ============
 const MathQuill = (() => {
-    const version = 3
-
     // Build option processors on top of the shared base
     const optionProcessors = {
         ...baseOptionProcessors,
@@ -99,7 +95,7 @@ const MathQuill = (() => {
             this.data = ctrlr.data
         }
 
-        abstract __mathquillify(opts: ConfigOptions, _interfaceVersion: number): IBaseMathQuill
+        abstract __mathquillify(opts: ConfigOptions): IBaseMathQuill
 
         mathquillify(classNames: string) {
             const ctrlr = this.__controller
@@ -109,7 +105,7 @@ const MathQuill = (() => {
 
             const contents = domFrag(el).addClass(classNames).children().detach()
             root.setDOM(
-                domFrag(h('span', { class: 'mq-root-block', 'aria-hidden': true }))
+                domFrag(h('span', { class: 'mq-root-block' }))
                     .appendTo(el)
                     .oneElement()
             )
@@ -125,16 +121,6 @@ const MathQuill = (() => {
                 return el
             }
         }
-
-        setAriaLabel(ariaLabel: string) {
-            this.__controller.setAriaLabel(ariaLabel)
-            return this
-        }
-
-        getAriaLabel() {
-            return this.__controller.getAriaLabel()
-        }
-
         config(opts: ConfigOptions) {
             config(this.__options, opts)
             return this
@@ -146,10 +132,6 @@ const MathQuill = (() => {
 
         text() {
             return this.__controller.exportText()
-        }
-
-        mathspeak() {
-            return this.__controller.exportMathSpeak()
         }
 
         latex(latex: unknown): typeof this
@@ -299,15 +281,6 @@ const MathQuill = (() => {
             cmd.createLeftOf(this.__controller.cursor)
         }
 
-        setAriaPostLabel(ariaPostLabel: string, timeout?: number) {
-            this.__controller.setAriaPostLabel(ariaPostLabel, timeout)
-            return this
-        }
-
-        getAriaPostLabel() {
-            return this.__controller.getAriaPostLabel()
-        }
-
         clickAt(clientX: number, clientY: number, target?: HTMLElement) {
             const el = document.elementFromPoint(clientX, clientY)
             if (el instanceof HTMLElement) target = target || el
@@ -396,7 +369,7 @@ const MathQuill = (() => {
                 new BaseOptions()
             )
             ctrlr.KIND_OF_MQ = kind as any
-            return new APIClass(ctrlr).__mathquillify(opts || {}, version)
+            return new APIClass(ctrlr).__mathquillify(opts || {})
         }
         mqEntrypoint.prototype = APIClass.prototype
         return mqEntrypoint

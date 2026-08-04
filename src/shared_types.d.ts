@@ -11,7 +11,7 @@ type ControllerEvent =
   | 'edit'
   | 'select'
   | undefined
-type JoinMethod = 'mathspeak' | 'latex' | 'text'
+type JoinMethod = | 'latex' | 'text'
 
 // These types are just aliases for the corresponding public types, for use in internal code.
 // If we version the interface, these can be changed to "MathQuill.v4...." (or maybe "MathQuill.v3.... | MathQuill.v3....")
@@ -25,10 +25,6 @@ type HandlerOptions = MathQuill.v3.HandlerOptions
 
 type ConfigOptions = MathQuill.v1.Config | MathQuill.v3.Config
 
-type MathspeakOptions = {
-  createdLeftOf?: Cursor
-  ignoreShorthand?: boolean
-}
 type InequalityData = {
   ctrlSeq: string
   ctrlSeqStrict: string
@@ -36,8 +32,6 @@ type InequalityData = {
   htmlEntityStrict: string
   text: string
   textStrict: string
-  mathspeak: string
-  mathspeakStrict: string
 }
 
 type ControllerData = any
@@ -71,8 +65,6 @@ type LatexCmd =
   | MQNodeBuilderNoParam
   | MQNodeBuilderOneParam
   | LatexFragmentBuilderNoParam
-type LatexCmds = Record<string, LatexCmd>
-type CharCmds = Record<string, LatexCmd>
 
 declare var validateAutoCommandsOption: any
 

@@ -83,7 +83,7 @@ class Cursor extends Point {
             //was hidden and detached, insert this.jQ back into HTML DOM
             const right = this[R]
             if (right) {
-                var selection = this.selection
+                const selection = this.selection
                 if (selection && selection.getEnd(L)[L] === this[L])
                     this.domFrag().insertBefore(selection.domFrag())
                 else this.domFrag().insertBefore(right.domFrag())
@@ -107,7 +107,7 @@ class Cursor extends Point {
         withDir: NodeRef,
         oppDir: NodeRef
     ) {
-        var oldParent = this.parent
+        const oldParent = this.parent
         this.parent = parent
         this[dir as Direction] = withDir
         this[-dir as Direction] = oppDir
@@ -153,21 +153,19 @@ class Cursor extends Point {
      *     the cursor's current position
      */
     jumpUpDown(from: MQNode, to: MQNode) {
-        var self = this
-        self.upDownCache[from.id] = Point.copy(self)
-        var cached = self.upDownCache[to.id]
+        this.upDownCache[from.id] = Point.copy(this)
+        const cached = this.upDownCache[to.id]
         if (cached) {
-            var cachedR = cached[R]
+            const cachedR = cached[R]
             if (cachedR) {
-                self.insLeftOf(cachedR)
+                this.insLeftOf(cachedR)
             } else {
-                self.insAtRightEnd(cached.parent)
+                this.insAtRightEnd(cached.parent)
             }
         } else {
-            var clientX = self.getBoundingClientRectWithoutMargin().left
-            to.seek(clientX, self)
+            const clientX = this.getBoundingClientRectWithoutMargin().left
+            to.seek(clientX, this)
         }
-        self.controller.aria.queue(to, true)
     }
     getBoundingClientRectWithoutMargin() {
         //in Opera 11.62, .getBoundingClientRect() and hence jQuery::offset()
@@ -187,12 +185,12 @@ class Cursor extends Point {
         }
     }
     unwrapGramp() {
-        var gramp = this.parent.parent
-        var greatgramp = gramp.parent
-        var rightward = gramp[R]
-        var cursor = this
+        const gramp = this.parent.parent
+        const greatgramp = gramp.parent
+        const rightward = gramp[R]
+        const cursor = this
 
-        var leftward = gramp[L]
+        let leftward = gramp[L]
         gramp.disown().eachChild(function (uncle) {
             if (uncle.isEmpty()) return true
 
@@ -210,11 +208,11 @@ class Cursor extends Point {
 
         if (!this[R]) {
             //then find something to be rightward to insLeftOf
-            var thisL = this[L]
+            const thisL = this[L]
             if (thisL) this[R] = thisL[R]
             else {
                 while (!this[R]) {
-                    var newParent = this.parent[R]
+                    const newParent = this.parent[R]
                     if (newParent) {
                         this.parent = newParent
                         this[R] = newParent.getEnd(L)
@@ -227,25 +225,25 @@ class Cursor extends Point {
             }
         }
 
-        var thisR = this[R]
+        const thisR = this[R]
         if (thisR) this.insLeftOf(thisR)
         else this.insAtRightEnd(greatgramp)
 
         gramp.domFrag().remove()
 
-        var grampL = gramp[L]
-        var grampR = gramp[R]
+        const grampL = gramp[L]
+        const grampR = gramp[R]
         if (grampL) grampL.siblingDeleted(cursor.options, R)
         if (grampR) grampR.siblingDeleted(cursor.options, L)
     }
     startSelection() {
-        var anticursor = (this.anticursor = Anticursor.fromCursor(this))
-        var ancestors = anticursor.ancestors
+        const anticursor = (this.anticursor = Anticursor.fromCursor(this))
+        const ancestors = anticursor.ancestors
 
         for (
-        var ancestor: MQNode | Anticursor = anticursor;
-        ancestor.parent;
-        ancestor = ancestor.parent
+            let ancestor: MQNode | Anticursor = anticursor;
+            ancestor.parent;
+            ancestor = ancestor.parent
         ) {
             ancestors[ancestor.parent.id] = ancestor
         }
@@ -254,25 +252,22 @@ class Cursor extends Point {
         delete this.anticursor
     }
     select() {
-        var _lca
-        var anticursor = this.anticursor!
+        let lca: MQNode | undefined
+        const anticursor = this.anticursor!
         if (this[L] === anticursor[L] && this.parent === anticursor.parent)
             return false
 
         // Find the lowest common ancestor (`lca`), and the ancestor of the cursor
         // whose parent is the LCA (which'll be an end of the selection fragment).
-        for (
-        var ancestor: MQNode | Point | undefined = this;
-        ancestor.parent;
-        ancestor = ancestor.parent
-        ) {
+        let ancestor: MQNode | Point | undefined = this
+        for (; ancestor.parent; ancestor = ancestor.parent) {
             if (ancestor.parent.id in anticursor.ancestors) {
-                _lca = ancestor.parent
+                lca = ancestor.parent
                 break
             }
         }
-        
-        var lca = _lca as MQNode
+
+        const lcaNode = lca as MQNode
 
         // The cursor and the anticursor should be in the same tree, because the
         // mousemove handler attached to the document, unlike the one attached to
@@ -282,15 +277,13 @@ class Cursor extends Point {
 
         // The other end of the selection fragment, the ancestor of the anticursor
         // whose parent is the LCA.
-        var antiAncestor = anticursor.ancestors[lca.id] as MQNode
+        const antiAncestor = anticursor.ancestors[lcaNode.id] as MQNode
 
         // Now we have two either Nodes or Points, guaranteed to have a common
         // parent and guaranteed that if both are Points, they are not the same,
         // and we have to figure out which is the left end and which the right end
         // of the selection.
-        var leftEnd,
-            rightEnd,
-            dir: Direction = R
+        let leftEnd, rightEnd, dir: Direction = R
 
         // This is an extremely subtle algorithm.
         // As a special case, `ancestor` could be a Point and `antiAncestor` a Node
@@ -304,7 +297,7 @@ class Cursor extends Point {
         // the right of `ancestor`.
         if (ancestor[L] !== antiAncestor) {
             for (
-                var rightward: NodeRef | Point | undefined = ancestor;
+                let rightward: NodeRef | Point | undefined = ancestor;
                 rightward;
                 rightward = rightward[R]
             ) {
@@ -325,16 +318,16 @@ class Cursor extends Point {
         if (leftEnd instanceof Point) leftEnd = leftEnd[R]
         if (rightEnd instanceof Point) rightEnd = rightEnd[L]
 
-        this.hide().selection = createSelection(lca, leftEnd as MQNode, rightEnd as MQNode);
+        this.hide().selection = createSelection(lcaNode, leftEnd as MQNode, rightEnd as MQNode)
 
-        var insEl = this.selection!.getEnd(dir)
+        const insEl = this.selection!.getEnd(dir)
         this.insDirOf(dir, insEl)
         this.selectionChanged()
         return true
     }
     resetToEnd(controller: ControllerBase) {
         this.clearSelection()
-        var root = controller.root
+        const root = controller.root
         this[R] = 0
         this[L] = root.getEnd(R)
         this.parent = root
@@ -348,7 +341,7 @@ class Cursor extends Point {
         return this
     }
     deleteSelection() {
-        var selection = this.selection
+        const selection = this.selection
         if (!selection) return
 
         this[L] = selection.getEnd(L)[L]
@@ -358,7 +351,7 @@ class Cursor extends Point {
         delete this.selection
     }
     replaceSelection() {
-        var seln = this.selection
+        const seln = this.selection
         if (seln) {
             this[L] = seln.getEnd(L)[L]
             this[R] = seln.getEnd(R)[R]
@@ -367,12 +360,12 @@ class Cursor extends Point {
         return seln
     }
     depth() {
-        var node: MQNode | Point = this;
-        var depth = 0;
+        let node: MQNode | Point = this
+        let depth = 0
         while ((node = node.parent)) {
-            depth += node.isMathBlock() ? 1 : 0;
+            depth += node.isMathBlock() ? 1 : 0
         }
-        return depth;
+        return depth
     }
     isTooDeep(offset?: number) {
         if (this.options.maxDepth !== undefined) {

@@ -1,5 +1,5 @@
 import type { Ends, Direction } from '../../types'
-import type { NodeRef, MathspeakOptions, JoinMethod } from '../../shared_types'
+import type { NodeRef, JoinMethod } from '../../shared_types'
 import type { Controller } from '../../services/textarea'
 import type { Options } from '../../options'
 import type { Cursor, Anticursor } from '../../cursor'
@@ -192,9 +192,6 @@ export class MathCommand extends MathElement {
 
         const el = updownInto || this.getEnd(-dir as Direction)
         cursor.insAtDirEnd(-dir as Direction, el)
-        cursor.controller.aria
-            .queueDirEndOf(-dir as Direction)
-            .queue(cursor.parent, true)
     }
 
     deleteTowards(dir: Direction, cursor: Cursor) {
@@ -303,26 +300,6 @@ export class MathCommand extends MathElement {
             return text + child_text + (cmd.textTemplate[i] || '')
         })
     }
-
-    mathspeakTemplate = ['']
-
-    mathspeak() {
-        var cmd = this,
-            i = 0
-        return cmd.foldChildren(
-            cmd.mathspeakTemplate[i] || 'Start' + cmd.ctrlSeq + ' ',
-            function (speech, block) {
-                i += 1
-                return (
-                    speech +
-                    ' ' +
-                    block.mathspeak() +
-                    ' ' +
-                    (cmd.mathspeakTemplate[i] + ' ' || 'End' + cmd.ctrlSeq + ' ')
-                )
-            }
-        )
-    }
 }
 
 /**
@@ -332,8 +309,7 @@ export class MQSymbol extends MathCommand {
     constructor(
         ctrlSeq?: string,
         html?: HTMLElement,
-        text?: string,
-        mathspeak?: string
+        text?: string
     ) {
         super()
         this.setCtrlSeqHtmlTextAndMathspeak(
@@ -341,22 +317,19 @@ export class MQSymbol extends MathCommand {
             html
                 ? new DOMView(0, () => html.cloneNode(true) as HTMLElement)
                 : undefined,
-            text,
-            mathspeak
+            text
         )
     }
 
     setCtrlSeqHtmlTextAndMathspeak(
         ctrlSeq?: string,
         html?: DOMView,
-        text?: string,
-        mathspeak?: string
+        text?: string
     ) {
         if (!text && !!ctrlSeq) {
             text = ctrlSeq.replace(/^\\/, '')
         }
 
-        this.mathspeakName = mathspeak || text
         super.setCtrlSeqHtmlAndText(ctrlSeq, html, [text || ''])
     }
 
@@ -377,7 +350,6 @@ export class MQSymbol extends MathCommand {
         cursor.domFrag().insDirOf(dir, this.domFrag())
         cursor[-dir as Direction] = this
         cursor[dir] = this[dir]
-        cursor.controller.aria.queue(this)
     }
     deleteTowards(dir: Direction, cursor: Cursor) {
         cursor[dir] = this.remove()[dir]
@@ -398,9 +370,6 @@ export class MQSymbol extends MathCommand {
     text() {
         return this.textTemplate.join('')
     }
-    mathspeak(_opts?: MathspeakOptions) {
-        return this.mathspeakName || ''
-    }
     placeCursor() { }
     isEmpty() {
         return true
@@ -408,8 +377,8 @@ export class MQSymbol extends MathCommand {
 }
 
 export class VanillaSymbol extends MQSymbol {
-    constructor(ch: string, html?: ChildNode, mathspeak?: string) {
-        super(ch, h('span', {}, [html || h.text(ch)]), undefined, mathspeak)
+    constructor(ch: string, html?: ChildNode) {
+        super(ch, h('span', {}, [html || h.text(ch)]), undefined)
     }
 }
 
@@ -418,22 +387,19 @@ export class BinaryOperator extends MQSymbol {
         ctrlSeq?: string,
         html?: ChildNode,
         text?: string,
-        mathspeak?: string,
         treatLikeSymbol?: boolean
     ) {
         if (treatLikeSymbol) {
             super(
                 ctrlSeq,
                 h('span', {}, [html || h.text(ctrlSeq || '')]),
-                undefined,
-                mathspeak
+                undefined
             )
         } else {
             super(
                 ctrlSeq,
                 h('span', { class: 'mq-binary-operator' }, html ? [html] : []),
-                text,
-                mathspeak
+                text
             )
         }
     }
@@ -441,29 +407,25 @@ export class BinaryOperator extends MQSymbol {
 
 export function bindVanillaSymbol(
     ch: string,
-    htmlEntity?: string,
-    mathspeak?: string
+    htmlEntity?: string
 ) {
     return () =>
         new VanillaSymbol(
             ch,
-            htmlEntity ? h.entityText(htmlEntity) : undefined,
-            mathspeak
+            htmlEntity ? h.entityText(htmlEntity) : undefined
         )
 }
 
 export function bindBinaryOperator(
     ctrlSeq?: string,
     htmlEntity?: string,
-    text?: string,
-    mathspeak?: string
+    text?: string
 ) {
     return () =>
         new BinaryOperator(
             ctrlSeq,
             htmlEntity ? h.entityText(htmlEntity) : undefined,
-            text,
-            mathspeak
+            text
         )
 }
 
@@ -503,51 +465,6 @@ export class MathBlock extends MathElement {
         return endsL === endsR && endsL !== 0 ? endsL.text() : this.join('text')
     }
 
-    mathspeak() {
-        var tempOp = ''
-        var autoOps: Options['autoOperatorNames'] = {}
-        if (this.controller) autoOps = this.controller.options.autoOperatorNames
-        return (
-            this.foldChildren<string[]>([], function (speechArray, cmd) {
-                if (cmd.isPartOfOperator) {
-                    tempOp += cmd.mathspeak()
-                } else {
-                    if (tempOp !== '') {
-                        if (autoOps._maxLength! > 0) {
-                            var x = autoOps[tempOp.toLowerCase()]
-                            if (typeof x === 'string') tempOp = x
-                        }
-                        speechArray.push(tempOp + ' ')
-                        tempOp = ''
-                    }
-                    var mathspeakText = cmd.mathspeak()
-                    var cmdText = cmd.ctrlSeq
-                    if (
-                        isNaN(cmdText as any) && // TODO - revisit this to improve the isNumber() check
-                        cmdText !== '.' &&
-                        (!cmd.parent ||
-                            !cmd.parent.parent ||
-                            !cmd.parent.parent.isTextBlock())
-                    ) {
-                        mathspeakText = ' ' + mathspeakText + ' '
-                    }
-                    speechArray.push(mathspeakText)
-                }
-                return speechArray
-            })
-                .join('')
-                .replace(/ +(?= )/g, '')
-                // For Apple devices in particular, split out digits after a decimal point so they aren't read aloud as whole words.
-                // Not doing so makes 123.456 potentially spoken as "one hundred twenty-three point four hundred fifty-six."
-                // Instead, add spaces so it is spoken as "one hundred twenty-three point four five six."
-                .replace(/(\.)([0-9]+)/g, function (_match, p1, p2) {
-                    return p1 + p2.split('').join(' ').trim()
-                })
-        )
-    }
-
-    ariaLabel = 'block'
-
     keystroke(key: string, e: KeyboardEvent | undefined, ctrlr: Controller) {
         if (
             ctrlr.options.spaceBehavesLikeTab &&
@@ -574,10 +491,8 @@ export class MathBlock extends MathElement {
         if (!updownInto && this[dir]) {
             const otherDir = -dir as Direction
             cursor.insAtDirEnd(otherDir, this[dir] as MQNode)
-            cursor.controller.aria.queueDirEndOf(otherDir).queue(cursor.parent, true)
         } else {
             cursor.insDirOf(dir, this.parent)
-            cursor.controller.aria.queueDirOf(dir).queue(this.parent)
         }
     }
 

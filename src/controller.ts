@@ -4,7 +4,6 @@ import type { Controller } from './services/textarea'
 
 import { L, R } from './types'
 import { Cursor } from './cursor'
-import { Aria } from './services/aria'
 import { KIND_OF_MQ } from './publicapi'
 import { Options } from './options'
 
@@ -26,12 +25,8 @@ type HandlerWithoutDirectionFunction = NonNullable<
 class ControllerBase {
     id: number
     data: ControllerData
-    aria: Aria
-    ariaLabel: string
-    ariaPostLabel: string
     readonly cursor: Cursor
     editable: boolean | undefined
-    _ariaAlertTimeout: number
     KIND_OF_MQ: KIND_OF_MQ
 
     textarea: HTMLElement | undefined
@@ -40,7 +35,6 @@ class ControllerBase {
     }> = {}
 
     textareaSpan: HTMLElement | undefined
-    mathspeakSpan: HTMLElement | undefined
 
     constructor(
         readonly root: ControllerRoot,
@@ -49,10 +43,6 @@ class ControllerBase {
     ) {
         this.id = root.id
         this.data = {}
-
-        this.aria = new Aria(this.getControllerSelf())
-        this.ariaLabel = 'Math Input'
-        this.ariaPostLabel = ''
 
         root.controller = this.getControllerSelf()
 
@@ -96,63 +86,6 @@ class ControllerBase {
         }
         return this
     }
-    setAriaLabel(ariaLabel: string) {
-        var oldAriaLabel = this.getAriaLabel()
-        if (ariaLabel && typeof ariaLabel === 'string' && ariaLabel !== '') {
-            this.ariaLabel = ariaLabel
-        } else if (this.editable) {
-            this.ariaLabel = 'Math Input'
-        } else {
-            this.ariaLabel = ''
-        }
-        // If this field doesn't have focus, update its computed mathspeak value.
-        // We check for focus because updating the aria-label attribute of a focused element will cause most screen readers to announce the new value (in our case, label along with the expression's mathspeak).
-        // If the field does have focus at the time, it will be updated once a blur event occurs.
-        // Unless we stop using fake text inputs and emulating screen reader behavior, this is going to remain a problem.
-        if (this.ariaLabel !== oldAriaLabel && !this.containerHasFocus()) {
-            this.updateMathspeak()
-        }
-        return this
-    }
-    getAriaLabel() {
-        if (this.ariaLabel !== 'Math Input') {
-            return this.ariaLabel
-        } else if (this.editable) {
-            return 'Math Input'
-        } else {
-            return ''
-        }
-    }
-    setAriaPostLabel(ariaPostLabel: string, timeout?: number) {
-        if (
-            ariaPostLabel &&
-            typeof ariaPostLabel === 'string' &&
-            ariaPostLabel !== ''
-        ) {
-            if (ariaPostLabel !== this.ariaPostLabel && typeof timeout === 'number') {
-                if (this._ariaAlertTimeout) clearTimeout(this._ariaAlertTimeout)
-                this._ariaAlertTimeout = setTimeout(() => {
-                    if (this.containerHasFocus()) {
-                        // Voice the new label, but do not update content mathspeak to prevent double-speech.
-                        this.aria.alert(
-                            this.root.mathspeak().trim() + ' ' + ariaPostLabel.trim()
-                        )
-                    } else {
-                        // This mathquill does not have focus, so update its mathspeak.
-                        this.updateMathspeak()
-                    }
-                }, timeout)
-            }
-            this.ariaPostLabel = ariaPostLabel
-        } else {
-            if (this._ariaAlertTimeout) clearTimeout(this._ariaAlertTimeout)
-            this.ariaPostLabel = ''
-        }
-        return this
-    }
-    getAriaPostLabel() {
-        return this.ariaPostLabel || ''
-    }
     containerHasFocus() {
         return (
             document.activeElement && this.container.contains(document.activeElement)
@@ -188,14 +121,7 @@ class ControllerBase {
         this.textarea.removeEventListener(event, listener as EventListener)
     }
 
-    // based on http://www.gh-mathspeak.com/examples/quick-tutorial/
-    // and http://www.gh-mathspeak.com/examples/grammar-rules/
-    exportMathSpeak() {
-        return this.root.mathspeak()
-    }
-
     // overridden
-    updateMathspeak() { }
     scrollHoriz() { }
     selectionChanged() { }
     setOverflowClasses() { }

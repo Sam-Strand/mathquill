@@ -7,7 +7,7 @@
  ************************************************/
 
 import type { Direction, Ends } from './types'
-import type { NodeRef, LatexCmds, CharCmds, MathspeakOptions, InnerMathField, InnerFields } from './shared_types'
+import type { NodeRef, InnerMathField, InnerFields } from './shared_types'
 import type { DOMFragment } from './domFragment'
 import type { Cursor } from './cursor'
 import type { Controller } from './services/textarea'
@@ -152,9 +152,7 @@ class NodeBase {
     _el: Element | Text | undefined
     id = NodeBase.uniqueNodeId()
     ctrlSeq: string | undefined
-    ariaLabel: string | undefined
     textTemplate: string[] | undefined
-    mathspeakName: string | undefined
     sides:
         | {
             [L]: { ch: string; ctrlSeq: string }
@@ -162,7 +160,6 @@ class NodeBase {
         }
         | undefined
     blocks: any[] | undefined
-    mathspeakTemplate: string[] | undefined
     upInto: MQNode | undefined
     downInto: MQNode | undefined
     upOutOf?: MQNode | ((cursor: Cursor) => Cursor | undefined)
@@ -327,9 +324,7 @@ class NodeBase {
     reflow() { }
     registerInnerField(_innerFields: InnerFields, _mathField: InnerMathField) { }
     chToCmd(_ch: string, _options?: Options): this {}
-    mathspeak(_options?: MathspeakOptions) {
-        return ''
-    }
+
     seek(_clientX: number, _cursor: Cursor) { }
     siblingDeleted(_options: Options, _dir: Direction) { }
     siblingCreated(_options: Options, _dir: Direction) { }
@@ -369,17 +364,11 @@ class MQNode extends NodeBase {
             // End -> move to the end of the current block.
             case 'End':
                 ctrlr.notify('move').cursor.insAtRightEnd(cursor.parent)
-                ctrlr.aria.queue('end of').queue(cursor.parent, true)
                 break
 
             // Ctrl-End -> move all the way to the end of the root block.
             case 'Ctrl-End':
                 ctrlr.notify('move').cursor.insAtRightEnd(ctrlr.root)
-                ctrlr.aria
-                    .queue('end of')
-                    .queue(ctrlr.ariaLabel)
-                    .queue(ctrlr.root)
-                    .queue(ctrlr.ariaPostLabel)
                 break
 
             // Shift-End -> select to the end of the current block.
@@ -395,17 +384,11 @@ class MQNode extends NodeBase {
             // Home -> move to the start of the current block.
             case 'Home':
                 ctrlr.notify('move').cursor.insAtLeftEnd(cursor.parent)
-                ctrlr.aria.queue('beginning of').queue(cursor.parent, true)
                 break
 
             // Ctrl-Home -> move all the way to the start of the root block.
             case 'Ctrl-Home':
                 ctrlr.notify('move').cursor.insAtLeftEnd(ctrlr.root)
-                ctrlr.aria
-                    .queue('beginning of')
-                    .queue(ctrlr.ariaLabel)
-                    .queue(ctrlr.root)
-                    .queue(ctrlr.ariaPostLabel)
                 break
 
             // Shift-Home -> select to the start of the current block.
@@ -485,51 +468,28 @@ class MQNode extends NodeBase {
 
             // These remaining hotkeys are only of benefit to people running screen readers.
             case 'Ctrl-Alt-Up': // speak parent block that has focus
-                if (cursor.parent.parent && cursor.parent.parent instanceof MQNode)
-                    ctrlr.aria.queue(cursor.parent.parent)
-                else ctrlr.aria.queue('nothing above')
+
                 break
 
             case 'Ctrl-Alt-Down': // speak current block that has focus
-                if (cursor.parent && cursor.parent instanceof MQNode)
-                    ctrlr.aria.queue(cursor.parent)
-                else ctrlr.aria.queue('block is empty')
                 break
 
             case 'Ctrl-Alt-Left': // speak left-adjacent block
-                if (cursor.parent.parent && cursor.parent.parent.getEnd(L)) {
-                    ctrlr.aria.queue(cursor.parent.parent.getEnd(L))
-                } else {
-                    ctrlr.aria.queue('nothing to the left')
-                }
                 break
 
             case 'Ctrl-Alt-Right': // speak right-adjacent block
-                if (cursor.parent.parent && cursor.parent.parent.getEnd(R)) {
-                    ctrlr.aria.queue(cursor.parent.parent.getEnd(R))
-                } else {
-                    ctrlr.aria.queue('nothing to the right')
-                }
                 break
 
             case 'Ctrl-Alt-Shift-Down': // speak selection
-                if (cursor.selection)
-                    ctrlr.aria.queue(
-                        cursor.selection.join('mathspeak', ' ').trim() + ' selected'
-                    )
-                else ctrlr.aria.queue('nothing selected')
                 break
 
             case 'Ctrl-Alt-=':
             case 'Ctrl-Alt-Shift-Right': // speak ARIA post label (evaluation or error)
-                if (ctrlr.ariaPostLabel.length) ctrlr.aria.queue(ctrlr.ariaPostLabel)
-                else ctrlr.aria.queue('no answer')
                 break
 
             default:
                 return
         }
-        ctrlr.aria.alert()
         e?.preventDefault()
         ctrlr.scrollHoriz()
     }
@@ -738,15 +698,6 @@ class Fragment {
     }
 }
 
-/**
- * Registry of LaTeX commands and commands created when typing
- * a single character.
- *
- * (Commands are all subclasses of Node.)
- */
-var LatexCmds: LatexCmds = {}
-var CharCmds: CharCmds = {}
-
 function isMQNodeClass(cmd: any): cmd is typeof MQNode {
     return cmd && cmd.prototype instanceof MQNode
 }
@@ -755,8 +706,6 @@ export {
     Point,
     NodeBase,
     Fragment,
-    LatexCmds,
-    CharCmds,
     isMQNodeClass,
     eachNode,
     foldNodes,

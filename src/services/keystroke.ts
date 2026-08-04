@@ -68,7 +68,6 @@ class Controller_keystroke extends Controller_focusBlur {
 
         cursor.clearSelection()
         cursor.parent.moveOutOf(dir, cursor)
-        cursor.controller.aria.alert()
         return this.notify('move')
     }
     moveDir(dir: Direction) {
@@ -146,44 +145,6 @@ class Controller_keystroke extends Controller_focusBlur {
     }
     deleteDir(dir: Direction) {
         var cursor = this.cursor
-        var cursorEl = cursor[dir] as MQNode
-        var cursorElParent = cursor.parent.parent
-        var ctrlr = cursor.controller
-
-        if (cursorEl && cursorEl instanceof MQNode) {
-            if (cursorEl.sides) {
-                ctrlr.aria.queue(
-                    cursorEl.parent
-                        .chToCmd(cursorEl.sides[-dir as Direction].ch)
-                        .mathspeak({ createdLeftOf: cursor })
-                )
-                // generally, speak the current element if it has no blocks,
-                // but don't for text block commands as the deleteTowards method
-                // in the TextCommand class is responsible for speaking the new character under the cursor.
-            } else if (!cursorEl.blocks && cursorEl.parent.ctrlSeq !== '\\text') {
-                ctrlr.aria.queue(cursorEl)
-            }
-        } else if (cursorElParent && cursorElParent instanceof MQNode) {
-            if (cursorElParent.sides) {
-                ctrlr.aria.queue(
-                    cursorElParent.parent
-                        .chToCmd(cursorElParent.sides[dir].ch)
-                        .mathspeak({ createdLeftOf: cursor })
-                )
-            } else if (cursorElParent.blocks && cursorElParent.mathspeakTemplate) {
-                if (cursorElParent.upInto && cursorElParent.downInto) {
-                    // likely a fraction, and we just backspaced over the slash
-                    ctrlr.aria.queue(cursorElParent.mathspeakTemplate[1])
-                } else {
-                    var mst = cursorElParent.mathspeakTemplate
-                    var textToQueue = dir === L ? mst[0] : mst[mst.length - 1]
-                    ctrlr.aria.queue(textToQueue)
-                }
-            } else {
-                ctrlr.aria.queue(cursorElParent)
-            }
-        }
-
         var hadSelection = cursor.selection
         this.notify('edit'); // deletes selection if present
         if (!hadSelection) {
@@ -220,7 +181,6 @@ class Controller_keystroke extends Controller_focusBlur {
                 (cursor.parent as MQNode).getEnd(R)
             )
         }
-        cursor.controller.aria.queue(fragRemoved)
         fragRemoved.remove()
 
         cursor.insAtDirEnd(dir, cursor.parent)
@@ -295,12 +255,6 @@ class Controller_keystroke extends Controller_focusBlur {
         var cursor = this.cursor
         cursor.clearSelection()
         cursor.select() || cursor.show()
-        var selection = cursor.selection
-        if (selection) {
-            cursor.controller.aria
-                .clear()
-                .queue(selection.join('mathspeak', ' ').trim() + ' selected'); // clearing first because selection fires several times, and we don't want repeated speech.
-        }
         INCREMENTAL_SELECTION_OPEN = false
     }
 

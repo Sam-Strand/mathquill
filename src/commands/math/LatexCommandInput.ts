@@ -1,7 +1,8 @@
 /****************************************
  * Input box to type backslash commands
  ***************************************/
-import { Fragment, LatexCmds, CharCmds, isMQNodeClass, MQNode } from '../../tree'
+import { Fragment, isMQNodeClass, MQNode } from '../../tree'
+import { LatexCmds, CharCmds } from '../../registry'
 import { L, R } from '../../types'
 import { h } from '../../dom'
 import { DOMView, MathCommand, VanillaSymbol } from '../../commands/math/core'
@@ -49,25 +50,18 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 
             if (ch.match(/[a-z]/i)) {
                 new VanillaSymbol(ch).createLeftOf(cursor)
-                // TODO needs tests
-                cursor.controller.aria.alert(ch)
             } else {
-                var cmd = (this.parent as LatexCommandInput).renderCommand(cursor)
-                // TODO needs tests
-                cursor.controller.aria.queue(cmd.mathspeak({ createdLeftOf: cursor }))
                 if (ch !== '\\' || !this.isEmpty()) cursor.parent.write(cursor, ch)
-                else cursor.controller.aria.alert()
+
             }
         }
 
         var originalKeystroke = endsL.keystroke
         endsL.keystroke = function (key, e, ctrlr) {
             if (key === 'Tab' || key === 'Enter' || key === 'Spacebar') {
-                var cmd = (this.parent as LatexCommandInput).renderCommand(
+                (this.parent as LatexCommandInput).renderCommand(
                     ctrlr.cursor
                 )
-                // TODO needs tests
-                ctrlr.aria.alert(cmd.mathspeak({ createdLeftOf: ctrlr.cursor }))
                 e?.preventDefault()
                 return
             }

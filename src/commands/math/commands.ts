@@ -2,12 +2,13 @@
  * Commands and Operators.
  **************************/
 import type { Direction, Ends } from '../../types'
-import type { NodeRef, MathspeakOptions, InnerMathField, InnerFields, BracketSide } from '../../shared_types'
+import type { NodeRef, InnerMathField, InnerFields, BracketSide } from '../../shared_types'
 import type { HTMLTagName } from '../../dom'
 import type { DOMFragment } from '../../domFragment'
 import type { ControllerRoot, EmbedOptions } from '../../shared_types'
 
-import { Point, NodeBase, Fragment, LatexCmds, CharCmds, MQNode } from '../../tree'
+import { Point, NodeBase, Fragment, MQNode } from '../../tree'
+import { LatexCmds, CharCmds } from '../../registry'
 import { L, R } from '../../types'
 import { U_ZERO_WIDTH_SPACE, U_DOT_ABOVE, U_NARY_SUMMATION, U_NARY_PRODUCT, U_NARY_COPRODUCT, U_INTEGRAL } from '../../unicode'
 import { domFrag } from '../../domFragment'
@@ -113,44 +114,24 @@ var SVG_SYMBOLS = {
 }
 
 class Style extends MathCommand {
-    shouldNotSpeakDelimiters: boolean | undefined
 
     constructor(
         ctrlSeq: string,
         tagName: HTMLTagName,
         attrs: { class: string },
-        ariaLabel?: string,
-        opts?: { shouldNotSpeakDelimiters: boolean }
+        opts?: { }
     ) {
         super(
             ctrlSeq,
             new DOMView(1, (blocks) => h.block(tagName, attrs, blocks[0]))
         )
-        this.ariaLabel = ariaLabel || ctrlSeq.replace(/^\\/, '')
-        this.mathspeakTemplate = [
-            'Start' + this.ariaLabel + ',',
-            'End' + this.ariaLabel,
-        ]
-        // In most cases, mathspeak should announce the start and end of style blocks.
-        // There is one exception currently (mathrm).
-        this.shouldNotSpeakDelimiters = opts && opts.shouldNotSpeakDelimiters
-    }
-    mathspeak(opts?: MathspeakOptions) {
-        if (!this.shouldNotSpeakDelimiters || (opts && opts.ignoreShorthand)) {
-            return super.mathspeak()
-        }
-        return this.foldChildren('', function (speech, block) {
-            return speech + ' ' + block.mathspeak(opts)
-        }).trim()
     }
 }
 
 //fonts
 LatexCmds.mathrm = class extends Style {
     constructor() {
-        super('\\mathrm', 'span', { class: 'mq-roman mq-font' }, 'Roman Font', {
-            shouldNotSpeakDelimiters: true,
-        })
+        super('\\mathrm', 'span', { class: 'mq-roman mq-font' }, 'Roman Font', {})
     }
     isTextBlock() {
         return true
@@ -238,11 +219,6 @@ LatexCmds.textcolor = class extends MathCommand {
                 blocks[0]
             )
         )
-        this.ariaLabel = color.replace(/^\\/, '')
-        this.mathspeakTemplate = [
-            'Start ' + this.ariaLabel + ',',
-            'End ' + this.ariaLabel,
-        ]
     }
     latex() {
         var blocks0 = this.blocks![0]
@@ -265,24 +241,6 @@ LatexCmds.textcolor = class extends MathCommand {
     isStyleBlock() {
         return true
     }
-}
-
-// This test is used to determine whether an item may be treated as a whole number
-// for shortening the verbalized (mathspeak) forms of some fractions and superscripts.
-var intRgx = /^[\+\-]?[\d]+$/
-
-// Traverses the top level of the passed block's children and returns the concatenation of their ctrlSeq properties.
-// Used in shortened mathspeak computations as a block's .text() method can be potentially expensive.
-//
-function getCtrlSeqsFromBlock(block: NodeRef): string {
-    if (!block) return ''
-
-    let chars = ''
-    block.eachChild((child) => {
-        if (child.ctrlSeq !== undefined) chars += child.ctrlSeq
-    })
-
-    return chars
 }
 
 Options.prototype.charsThatBreakOutOfSupSub = ''
@@ -371,6 +329,7 @@ class SupSub extends MathCommand {
             }
         }
     }
+
     finalizeTree() {
         var endsL = this.getEnd(L)
         endsL.write = function (cursor: Cursor, ch: string) {
@@ -383,9 +342,6 @@ class SupSub extends MathCommand {
                 if (cmd instanceof MQSymbol) cursor.deleteSelection()
                 else cursor.clearSelection().insRightOf(this.parent)
                 cmd.createLeftOf(cursor.show())
-                cursor.controller.aria
-                    .queue('Baseline')
-                    .alert(cmd.mathspeak({ createdLeftOf: cursor }))
                 return
             }
             if (
@@ -395,7 +351,6 @@ class SupSub extends MathCommand {
                 cursor.options.charsThatBreakOutOfSupSub.indexOf(ch) > -1
             ) {
                 cursor.insRightOf(this.parent)
-                cursor.controller.aria.queue('Baseline')
             }
             MathBlock.prototype.write.call(this, cursor, ch)
         }
@@ -541,10 +496,6 @@ class SubscriptCommand extends SupSub {
 
     textTemplate = ['_']
 
-    mathspeakTemplate = ['Subscript,', ', Baseline']
-
-    ariaLabel = 'subscript'
-
     finalizeTree() {
         this.downInto = this.sub = this.getEnd(L)
         this.sub.upOutOf = insLeftOfMeUnlessAtEnd
@@ -567,49 +518,6 @@ LatexCmds.superscript =
         )
 
         textTemplate = ['^(', ')']
-        mathspeak(opts?: MathspeakOptions) {
-            // Simplify basic exponent speech for common whole numbers.
-            var child = this.upInto
-            if (child !== undefined) {
-                // Calculate this item's inner text to determine whether to shorten the returned speech.
-                // Do not calculate its inner mathspeak now until we know that the speech is to be truncated.
-                // Since the mathspeak computation is recursive, we want to call it only once in this function to avoid performance bottlenecks.
-                var innerText = getCtrlSeqsFromBlock(child)
-                // If the superscript is a whole number, shorten the speech that is returned.
-                if ((!opts || !opts.ignoreShorthand) && intRgx.test(innerText)) {
-                    // Simple cases
-                    if (innerText === '0') {
-                        return 'to the 0 power'
-                    } else if (innerText === '2') {
-                        return 'squared'
-                    } else if (innerText === '3') {
-                        return 'cubed'
-                    }
-
-                    // More complex cases.
-                    var suffix = ''
-                    // Limit suffix addition to exponents < 1000.
-                    if (/^[+-]?\d{1,3}$/.test(innerText)) {
-                        if (/(11|12|13|4|5|6|7|8|9|0)$/.test(innerText)) {
-                            suffix = 'th'
-                        } else if (/1$/.test(innerText)) {
-                            suffix = 'st'
-                        } else if (/2$/.test(innerText)) {
-                            suffix = 'nd'
-                        } else if (/3$/.test(innerText)) {
-                            suffix = 'rd'
-                        }
-                    }
-                    var innerMathspeak =
-                        typeof child === 'object' ? child.mathspeak() : innerText
-                    return 'to the ' + innerMathspeak + suffix + ' power'
-                }
-            }
-            return super.mathspeak()
-        }
-
-        ariaLabel = 'superscript'
-        mathspeakTemplate = ['Superscript,', ', Baseline']
         finalizeTree() {
             this.upInto = this.sup = this.getEnd(R)
             this.sup.downOutOf = insLeftOfMeUnlessAtEnd
@@ -618,10 +526,9 @@ LatexCmds.superscript =
     }
 
 class SummationNotation extends MathCommand {
-    constructor(ch: string, symbol: string, ariaLabel?: string) {
+    constructor(ch: string, symbol: string) {
         super()
 
-        this.ariaLabel = ariaLabel || ch.replace(/^\\/, '')
         var domView = new DOMView(2, (blocks) =>
             h('span', { class: 'mq-large-operator mq-non-leaf' }, [
                 h('span', { class: 'mq-to' }, [h.block('span', {}, blocks[1])]),
@@ -639,6 +546,7 @@ class SummationNotation extends MathCommand {
             new Equality().createLeftOf(cursor)
         }
     }
+
     latex() {
         function simplify(latex: string) {
             return '{' + (latex || ' ') + '}'
@@ -651,49 +559,33 @@ class SummationNotation extends MathCommand {
             simplify(this.getEnd(R).latex())
         )
     }
-    mathspeak() {
-        return (
-            'Start ' +
-            this.ariaLabel +
-            ' from ' +
-            this.getEnd(L).mathspeak() +
-            ' to ' +
-            this.getEnd(R).mathspeak() +
-            ', end ' +
-            this.ariaLabel +
-            ', '
-        )
-    }
-    parser() {
-        var string = Parser.string
-        var optWhitespace = Parser.optWhitespace
-        var succeed = Parser.succeed
-        var block = latexMathParser.block
 
-        var self = this
-        var blocks = (self.blocks = [new MathBlock(), new MathBlock()])
+    parser() {
+        const string = Parser.string
+        const succeed = Parser.succeed
+        const block = latexMathParser.block
+
+        var blocks = (this.blocks = [new MathBlock(), new MathBlock()])
         for (var i = 0; i < blocks.length; i += 1) {
-            blocks[i].adopt(self, self.getEnd(R), 0)
+            blocks[i].adopt(this, this.getEnd(R), 0)
         }
 
-        return optWhitespace
+        return Parser.optWhitespace
             .then(string('_').or(string('^')))
             .then(function (supOrSub) {
                 var child = blocks[supOrSub === '_' ? 0 : 1]
                 return block.then(function (block) {
                     block.children().adopt(child, child.getEnd(R), 0)
-                    return succeed(self)
+                    return succeed(this)
                 })
             })
             .many()
-            .result(self)
+            .result(this)
     }
-    finalizeTree() {
-        var endsL = this.getEnd(L)
-        var endsR = this.getEnd(R)
 
-        endsL.ariaLabel = 'lower bound'
-        endsR.ariaLabel = 'upper bound'
+    finalizeTree() {
+        const endsL = this.getEnd(L)
+        const endsR = this.getEnd(R)
         this.downInto = endsL
         this.upInto = endsR
         endsL.upOutOf = endsR
@@ -704,24 +596,23 @@ class SummationNotation extends MathCommand {
 LatexCmds['∑'] =
     LatexCmds.sum =
     LatexCmds.summation =
-    () => new SummationNotation('\\sum ', U_NARY_SUMMATION, 'sum')
+    () => new SummationNotation('\\sum ', U_NARY_SUMMATION)
 
 LatexCmds['∏'] =
     LatexCmds.prod =
     LatexCmds.product =
-    () => new SummationNotation('\\prod ', U_NARY_PRODUCT, 'product')
+    () => new SummationNotation('\\prod ', U_NARY_PRODUCT)
 
 LatexCmds.coprod = LatexCmds.coproduct = () =>
-    new SummationNotation('\\coprod ', U_NARY_COPRODUCT, 'co product')
+    new SummationNotation('\\coprod ', U_NARY_COPRODUCT)
 
 LatexCmds['∫'] =
     LatexCmds['int'] =
     LatexCmds.integral =
     class extends SummationNotation {
         constructor() {
-            super('\\int ', '', 'integral')
+            super('\\int ', '')
 
-            this.ariaLabel = 'integral'
             this.domView = new DOMView(2, (blocks) =>
                 h('span', { class: 'mq-int mq-non-leaf' }, [
                     h('big', {}, [h.text(U_INTEGRAL)]),
@@ -765,85 +656,7 @@ var Fraction =
                 const endsR = this.getEnd(R)
                 this.upInto = endsR.upOutOf = endsL
                 this.downInto = endsL.downOutOf = endsR
-                endsL.ariaLabel = 'numerator'
-                endsR.ariaLabel = 'denominator'
-                if (this.getFracDepth() > 1) {
-                    this.mathspeakTemplate = [
-                        'StartNestedFraction,',
-                        'NestedOver',
-                        ', EndNestedFraction',
-                    ]
-                } else {
-                    this.mathspeakTemplate = ['StartFraction,', 'Over', ', EndFraction']
-                }
             }
-
-            mathspeak(opts?: MathspeakOptions) {
-                if (opts && opts.createdLeftOf) {
-                    var cursor = opts.createdLeftOf
-                    return cursor.parent.mathspeak()
-                }
-
-                var numText = getCtrlSeqsFromBlock(this.getEnd(L))
-                var denText = getCtrlSeqsFromBlock(this.getEnd(R))
-
-                // Shorten mathspeak value for whole number fractions whose denominator is less than 10.
-                if (
-                    (!opts || !opts.ignoreShorthand) &&
-                    intRgx.test(numText) &&
-                    intRgx.test(denText)
-                ) {
-                    var isSingular = numText === '1' || numText === '-1'
-                    var newDenSpeech = ''
-                    if (denText === '2') {
-                        newDenSpeech = isSingular ? 'half' : 'halves'
-                    } else if (denText === '3') {
-                        newDenSpeech = isSingular ? 'third' : 'thirds'
-                    } else if (denText === '4') {
-                        newDenSpeech = isSingular ? 'quarter' : 'quarters'
-                    } else if (denText === '5') {
-                        newDenSpeech = isSingular ? 'fifth' : 'fifths'
-                    } else if (denText === '6') {
-                        newDenSpeech = isSingular ? 'sixth' : 'sixths'
-                    } else if (denText === '7') {
-                        newDenSpeech = isSingular ? 'seventh' : 'sevenths'
-                    } else if (denText === '8') {
-                        newDenSpeech = isSingular ? 'eighth' : 'eighths'
-                    } else if (denText === '9') {
-                        newDenSpeech = isSingular ? 'ninth' : 'ninths'
-                    }
-                    if (newDenSpeech !== '') {
-                        var output = ''
-                        // Handle the case of an integer followed by a simplified fraction such as 1\frac{1}{2}.
-                        // Such combinations should be spoken aloud as "1 and 1 half."
-                        // Start at the left sibling of the fraction and continue leftward until something other than a digit or whitespace is found.
-                        var precededByInteger = false
-                        for (
-                            var sibling: NodeRef | undefined = this[L];
-                            sibling && sibling[L] !== undefined;
-                            sibling = sibling[L]
-                        ) {
-                            // Ignore whitespace
-                            if (sibling.ctrlSeq === '\\ ') {
-                                continue
-                            } else if (intRgx.test(sibling.ctrlSeq || '')) {
-                                precededByInteger = true
-                            } else {
-                                precededByInteger = false
-                                break
-                            }
-                        }
-                        if (precededByInteger) {
-                            output += 'and '
-                        }
-                        output += this.getEnd(L).mathspeak() + ' ' + newDenSpeech
-                        return output
-                    }
-                }
-
-                return super.mathspeak()
-            }
-
             getFracDepth() {
                 var level = 0
                 var walkUp = function (item: NodeRef, level: number): number {
@@ -935,8 +748,6 @@ class SquareRoot extends MathCommand {
         ])
     )
     textTemplate = ['sqrt(', ')']
-    mathspeakTemplate = ['StartRoot,', ', EndRoot']
-    ariaLabel = 'root'
     parser() {
         return latexMathParser.optBlock
             .then(function (optBlock) {
@@ -983,24 +794,6 @@ class NthRoot extends SquareRoot {
         return (
             '\\sqrt[' + this.getEnd(L).latex() + ']{' + this.getEnd(R).latex() + '}'
         )
-    }
-    mathspeak() {
-        var indexMathspeak = this.getEnd(L).mathspeak()
-        var radicandMathspeak = this.getEnd(R).mathspeak()
-        this.getEnd(L).ariaLabel = 'Index'
-        this.getEnd(R).ariaLabel = 'Radicand'
-        if (indexMathspeak === '3') {
-            // cube root
-            return 'Start Cube Root, ' + radicandMathspeak + ', End Cube Root'
-        } else {
-            return (
-                'Root Index ' +
-                indexMathspeak +
-                ', Start Root, ' +
-                radicandMathspeak +
-                ', End Root'
-            )
-        }
     }
 }
 LatexCmds.nthroot = NthRoot
@@ -1131,30 +924,6 @@ class Bracket extends DelimsNode {
             '\\right' +
             this.sides[R].ctrlSeq
         )
-    }
-    mathspeak(opts?: MathspeakOptions) {
-        var open = this.sides[L].ch,
-            close = this.sides[R].ch
-        if (open === '|' && close === '|') {
-            this.mathspeakTemplate = ['StartAbsoluteValue,', ', EndAbsoluteValue']
-            this.ariaLabel = 'absolute value'
-        } else if (opts && opts.createdLeftOf && this.side) {
-            var ch = ''
-            if (this.side === L) ch = this.textTemplate[0]
-            else if (this.side === R) ch = this.textTemplate[1]
-            return (
-                (this.side === L ? 'left ' : 'right ') +
-                BRACKET_NAMES[ch as keyof typeof BRACKET_NAMES]
-            )
-        } else {
-            this.mathspeakTemplate = [
-                'left ' + BRACKET_NAMES[open as keyof typeof BRACKET_NAMES] + ',',
-                ', right ' + BRACKET_NAMES[close as keyof typeof BRACKET_NAMES],
-            ]
-            this.ariaLabel =
-                BRACKET_NAMES[open as keyof typeof BRACKET_NAMES] + ' block'
-        }
-        return super.mathspeak()
     }
     matchBrack(
         opts: Options,
@@ -1524,8 +1293,6 @@ class Binomial extends DelimsNode {
     )
 
     textTemplate = ['choose(', ',', ')']
-    mathspeakTemplate = ['StartBinomial,', 'Choose', ', EndBinomial']
-    ariaLabel = 'binomial'
 }
 
 LatexCmds.binom = LatexCmds.binomial = Binomial
@@ -1543,7 +1310,7 @@ class MathFieldNode extends MathCommand {
         return h('span', { class: 'mq-editable-field' }, [
             h.block(
                 'span',
-                { class: 'mq-root-block', 'aria-hidden': 'true' },
+                { class: 'mq-root-block' },
                 blocks[0]
             ),
         ])
@@ -1563,7 +1330,7 @@ class MathFieldNode extends MathCommand {
             .then(super.parser())
     }
     finalizeTree(options: Options) {
-        var ctrlr = new Controller(
+        const ctrlr = new Controller(
             this.getEnd(L) as ControllerRoot,
             this.domFrag().oneElement(),
             options
@@ -1574,45 +1341,6 @@ class MathFieldNode extends MathCommand {
         ctrlr.editablesTextareaEvents()
         ctrlr.cursor.insAtRightEnd(ctrlr.root)
         RootBlockMixin(ctrlr.root)
-
-        // MathQuill applies aria-hidden to .mq-root-block containers
-        // because these contain math notation that screen readers can't
-        // interpret directly. MathQuill use an aria-live region as a
-        // sibling of these block containers to provide an alternative
-        // representation for screen readers
-        //
-        // MathFieldNodes have their own focusable text aria and aria live
-        // region, so it is incorrect for any parent of the editable field
-        // to have an aria-hidden property
-        //
-        // https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-hidden
-        //
-        // Handle this by recursively walking the parents of this element
-        // until we hit a root block, and if we hit any parent with
-        // aria-hidden="true", removing the property from the parent and
-        // pushing it down to each of the parents children. This should
-        // result in no parent of this node having aria-hidden="true", but
-        // should keep as much of what was previously hidden hidden as
-        // possible while obeying this constraint
-        function pushDownAriaHidden(node: ParentNode) {
-            if (node.parentNode && !domFrag(node).hasClass('mq-root-block')) {
-                pushDownAriaHidden(node.parentNode)
-            }
-            if (node.nodeType === Node.ELEMENT_NODE) {
-                const element = node as Element
-                if (element.getAttribute('aria-hidden') === 'true') {
-                    element.removeAttribute('aria-hidden')
-                    domFrag(node)
-                        .children()
-                        .eachElement((child) => {
-                            child.setAttribute('aria-hidden', 'true')
-                        })
-                }
-            }
-        }
-
-        pushDownAriaHidden(this.domFrag().parent().oneElement())
-        this.domFrag().oneElement().removeAttribute('aria-hidden')
     }
     registerInnerField(innerFields: InnerFields, MathField: InnerMathField) {
         const controller = (this.getEnd(L) as RootMathBlock).controller

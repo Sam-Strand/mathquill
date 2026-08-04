@@ -7,16 +7,12 @@
 
     <title>MathQuill Performance Test Page</title>
 
-    <link rel="stylesheet" type="text/css" href="../build/mathquill.css" />
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
-    <script type="text/javascript" src="../test/support/jquery-1.5.2.js"></script>
     <script type="text/javascript">
         window.onerror = function (err) {
             document.querySelector('html').style.background = 'red'
         }
     </script>
-    <script type="text/javascript" src="../build/mathquill.js"></script>
 
     <style type="text/css">
         body {
@@ -59,8 +55,10 @@
         <input id="all-results" type="text" />
     </div>
 
-    <script type="text/javascript">
-        const MQ = MathQuill.getInterface(MathQuill.getInterface.MAX)
+    <script type="module">
+        import MathQuill from 'mathquill'
+        import 'mathquill/mathquill.css'
+
         const params = new URLSearchParams(window.location.search)
         if (!params.has('seed')) {
             params.append('seed', Math.random().toString(16).slice(2, 10))
@@ -117,7 +115,7 @@
             mqElement.innerText = latex
 
             let start = performance.now()
-            MQ.MathField(mqElement)
+            MathQuill.MathField(mqElement)
             // Force syncronous layout
             document.body.getBoundingClientRect()
             const mqDuration = performance.now() - start

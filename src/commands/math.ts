@@ -1,7 +1,8 @@
 import type { NodeRef, LatexCmdsSingleCharBuilder, CharCmdsAny, LatexCmdsAny } from '../shared_types'
 import type { MQNode, Fragment } from '../tree'
 
-import { LatexCmds, CharCmds, isMQNodeClass } from '../tree'
+import { isMQNodeClass } from '../tree'
+import { LatexCmds, CharCmds } from '../registry'
 import { L, R } from '../types'
 import { domFrag } from '../domFragment'
 import { RootBlockMixin } from '../mixins'
@@ -38,12 +39,6 @@ MathBlock.prototype.write = function (cursor: Cursor, ch: string) {
     if (cursor.selection) cmd.replaces(cursor.replaceSelection())
     if (!cursor.isTooDeep()) {
         cmd.createLeftOf(cursor.show())
-        // special-case the slash so that fractions are voiced while typing
-        if (ch === '/') {
-            cursor.controller.aria.alert('over')
-        } else {
-            cursor.controller.aria.alert(cmd.mathspeak({ createdLeftOf: cursor }))
-        }
     }
 }
 

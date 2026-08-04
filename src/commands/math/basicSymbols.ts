@@ -2,12 +2,13 @@
  * Symbols for Basic Mathematics
  ********************************/
 
-import type { NodeRef, MathspeakOptions, InequalityData, LatexCmdsAny } from '../../shared_types'
+import type { NodeRef, InequalityData, LatexCmdsAny } from '../../shared_types'
 import type { AutoDict } from '../../publicapi'
 import type { Direction } from '../../types'
 import type { TempSingleCharNode } from '../../services/latex'
 
-import { Fragment, LatexCmds, CharCmds, isMQNodeClass, MQNode } from '../../tree'
+import { Fragment, isMQNodeClass, MQNode } from '../../tree'
+import { LatexCmds, CharCmds } from '../../registry'
 import { L, R } from '../../types'
 import './LatexCommandInput'
 import { U_NO_BREAK_SPACE } from '../../unicode'
@@ -185,12 +186,11 @@ class DigitGroupingChar extends MQSymbol {
 }
 
 class Digit extends DigitGroupingChar {
-    constructor(ch: string, mathspeak?: string) {
+    constructor(ch: string) {
         super(
             ch,
             h('span', { class: 'mq-digit' }, [h.text(ch)]),
-            undefined,
-            mathspeak
+            undefined
         )
     }
 
@@ -214,29 +214,6 @@ class Digit extends DigitGroupingChar {
             super.createLeftOf(cursor)
             cursor.insRightOf(cursor.parent.parent)
         } else super.createLeftOf(cursor)
-    }
-    mathspeak(opts: MathspeakOptions) {
-        if (opts && opts.createdLeftOf) {
-            var cursor = opts.createdLeftOf
-            var cursorL = cursor[L]
-            var cursorLL = cursorL && cursorL[L]
-            const cursorParentParentSub =
-                cursor.parent.parent instanceof SupSub
-                    ? cursor.parent.parent.sub
-                    : undefined
-
-            if (
-                cursor.options.autoSubscriptNumerals &&
-                cursor.parent !== cursorParentParentSub &&
-                ((cursorL instanceof Variable && cursorL.isItalic !== false) ||
-                    (cursor[L] instanceof SupSub &&
-                        cursorLL instanceof Variable &&
-                        cursorLL.isItalic !== false))
-            ) {
-                return 'Subscript ' + super.mathspeak() + ' Baseline'
-            }
-        }
-        return super.mathspeak()
     }
 }
 
@@ -271,28 +248,10 @@ class Variable extends MQSymbol {
         }
         return text
     }
-    mathspeak() {
-        var text = this.ctrlSeq || ''
-        if (
-            this.isPartOfOperator ||
-            text.length > 1 ||
-            (this.parent && this.parent.parent && this.parent.parent.isTextBlock())
-        ) {
-            return super.mathspeak()
-        } else {
-            // Apple voices in VoiceOver (such as Alex, Bruce, and Victoria) do
-            // some strange pronunciation given certain expressions,
-            // e.g. "y-2" is spoken as "ee minus 2" (as if the y is short).
-            // Not an ideal solution, but surrounding non-numeric text blocks with quotation marks works.
-            // This bug has been acknowledged by Apple.
-            return '"' + text + '"'
-        }
-    }
 }
 function bindVariable(
     ch: string,
-    htmlEntity: string,
-    _unusedMathspeak?: string
+    htmlEntity: string
 ) {
     return () => new Variable(ch, h.entityText(htmlEntity))
 }
@@ -304,12 +263,12 @@ baseOptionProcessors.autoCommands = function (cmds: string | undefined) {
     if (typeof cmds !== 'string' || !/^[a-z]+(?: [a-z]+)*$/i.test(cmds)) {
         throw '"' + cmds + '" not a space-delimited list of only letters'
     }
-    var list = cmds.split(' ')
-    var dict: AutoDict = {}
-    var maxLength = 0
+    const list = cmds.split(' ')
+    const dict: AutoDict = {}
+    let maxLength = 0
 
     for (var i = 0; i < list.length; i += 1) {
-        var cmd = list[i]
+        const cmd = list[i]
         if (cmd.length < 2) {
             throw 'autocommand "' + cmd + '" not minimum length of 2'
         }
@@ -326,10 +285,10 @@ baseOptionProcessors.autoCommands = function (cmds: string | undefined) {
 
 Options.prototype.quietEmptyDelimiters = {}
 baseOptionProcessors.quietEmptyDelimiters = function (dlms: string = '') {
-    var list = dlms.split(' ')
-    var dict: { [id: string]: any } = {}
+    const list = dlms.split(' ')
+    const dict: { [id: string]: any } = {}
     for (var i = 0; i < list.length; i += 1) {
-        var dlm = list[i]
+        const dlm = list[i]
         dict[dlm] = 1
     }
     return dict
@@ -340,11 +299,11 @@ baseOptionProcessors.autoParenthesizedFunctions = function (cmds) {
     if (typeof cmds !== 'string' || !/^[a-z]+(?: [a-z]+)*$/i.test(cmds)) {
         throw '"' + cmds + '" not a space-delimited list of only letters'
     }
-    var list = cmds.split(' ')
-    var dict: AutoDict = {}
-    var maxLength = 0
+    const list = cmds.split(' ')
+    const dict: AutoDict = {}
+    let maxLength = 0
     for (var i = 0; i < list.length; i += 1) {
-        var cmd = list[i]
+        const cmd = list[i]
         if (cmd.length < 2) {
             throw 'autocommand "' + cmd + '" not minimum length of 2'
         }
@@ -678,6 +637,7 @@ baseOptionProcessors.autoOperatorNames = function (cmds) {
     dict._maxLength = maxLength
     return dict
 }
+
 class OperatorName extends MQSymbol {
     declare ctrlSeq: string
     constructor(fn?: string) {
@@ -764,34 +724,30 @@ LatexCmds['.'] = () =>
         '.'
     )
 
-LatexCmds["'"] = LatexCmds.prime = bindVanillaSymbol("'", '&prime;', 'prime')
-LatexCmds['″'] = LatexCmds.dprime = bindVanillaSymbol(
-    '″',
-    '&Prime;',
-    'double prime'
-)
+LatexCmds["'"] = LatexCmds.prime = bindVanillaSymbol("'", '&prime;')
+LatexCmds['″'] = LatexCmds.dprime = bindVanillaSymbol('″', '&Prime;')
 
-LatexCmds.backslash = bindVanillaSymbol('\\backslash ', '\\', 'backslash')
+LatexCmds.backslash = bindVanillaSymbol('\\backslash ', '\\')
 if (!CharCmds['\\']) CharCmds['\\'] = LatexCmds.backslash
 
-LatexCmds.$ = bindVanillaSymbol('\\$', '$', 'dollar')
+LatexCmds.$ = bindVanillaSymbol('\\$', '$')
 
-LatexCmds.square = bindVanillaSymbol('\\square ', '\u25A1', 'square')
-LatexCmds.mid = bindVanillaSymbol('\\mid ', '\u2223', 'mid')
+LatexCmds.square = bindVanillaSymbol('\\square ', '\u25A1')
+LatexCmds.mid = bindVanillaSymbol('\\mid ', '\u2223')
 
 // does not use Symbola font
 class NonSymbolaSymbol extends MQSymbol {
-    constructor(ch: string, html?: ChildNode, _unusedMathspeak?: string) {
+    constructor(ch: string, html?: ChildNode) {
         super(ch, h('span', { class: 'mq-nonSymbola' }, [html || h.text(ch)]))
     }
 }
 
 LatexCmds['@'] = () => new NonSymbolaSymbol('@')
 LatexCmds['&'] = () =>
-    new NonSymbolaSymbol('\\&', h.entityText('&amp;'), 'and')
+    new NonSymbolaSymbol('\\&', h.entityText('&amp;'))
 LatexCmds['%'] = class extends NonSymbolaSymbol {
     constructor() {
-        super('\\%', h.text('%'), 'percent')
+        super('\\%', h.text('%'))
     }
     parser() {
         var optWhitespace = Parser.optWhitespace
@@ -811,20 +767,17 @@ LatexCmds['%'] = class extends NonSymbolaSymbol {
 
 LatexCmds['∥'] = LatexCmds.parallel = bindVanillaSymbol(
     '\\parallel ',
-    '&#x2225;',
-    'parallel'
+    '&#x2225;'
 )
 
 LatexCmds['∦'] = LatexCmds.nparallel = bindVanillaSymbol(
     '\\nparallel ',
-    '&#x2226;',
-    'not parallel'
+    '&#x2226;'
 )
 
 LatexCmds['⟂'] = LatexCmds.perp = bindVanillaSymbol(
     '\\perp ',
-    '&#x27C2;',
-    'perpendicular'
+    '&#x27C2;'
 )
 
 //the following are all Greek to me, but this helped a lot: http://www.ams.org/STIX/ion/stixsig03.html
@@ -852,7 +805,7 @@ LatexCmds.alpha =
         new Variable('\\' + latex + ' ', h.entityText('&' + latex + ';'))
 
 //why can't anybody FUCKING agree on these
-LatexCmds.phi = bindVariable('\\phi ', '&#981;', 'phi'); //W3C or Unicode?
+LatexCmds.phi = bindVariable('\\phi ', '&#981;'); //W3C or Unicode?
 
 LatexCmds.phiv = LatexCmds.varphi = bindVariable('\\varphi ', '&phi;', 'phi'); //Elsevier and 9573-13 //AMS and LaTeX
 
@@ -861,49 +814,46 @@ LatexCmds.epsilon = bindVariable('\\epsilon ', '&#1013;', 'epsilon'); //W3C or U
 LatexCmds.epsiv = LatexCmds.varepsilon = bindVariable(
     //Elsevier and 9573-13 //AMS and LaTeX
     '\\varepsilon ',
-    '&epsilon;',
-    'epsilon'
+    '&epsilon;'
 )
 
-LatexCmds.piv = LatexCmds.varpi = bindVariable('\\varpi ', '&piv;', 'piv'); //W3C/Unicode and Elsevier and 9573-13 //AMS and LaTeX
+LatexCmds.piv = LatexCmds.varpi = bindVariable('\\varpi ', '&piv;'); //W3C/Unicode and Elsevier and 9573-13 //AMS and LaTeX
 
 LatexCmds.sigmaf = //W3C/Unicode
     LatexCmds.sigmav = //Elsevier
     LatexCmds.varsigma = //LaTeX
-    bindVariable('\\varsigma ', '&sigmaf;', 'sigma')
+    bindVariable('\\varsigma ', '&sigmaf;')
 
 LatexCmds.thetav = //Elsevier and 9573-13
     LatexCmds.vartheta = //AMS and LaTeX
     LatexCmds.thetasym = //W3C/Unicode
-    bindVariable('\\vartheta ', '&thetasym;', 'theta')
+    bindVariable('\\vartheta ', '&thetasym;')
 
 LatexCmds.upsilon = LatexCmds.upsi = bindVariable(
     //AMS and LaTeX and W3C/Unicode //Elsevier and 9573-13
     '\\upsilon ',
-    '&upsilon;',
-    'upsilon'
+    '&upsilon;'
 )
 
 //these aren't even mentioned in the HTML character entity references
 LatexCmds.gammad = //Elsevier
     LatexCmds.Gammad = //9573-13 -- WTF, right? I dunno if this was a typo in the reference (see above)
     LatexCmds.digamma = //LaTeX
-    bindVariable('\\digamma ', '&#989;', 'gamma')
+    bindVariable('\\digamma ', '&#989;')
 
 LatexCmds.kappav = LatexCmds.varkappa = bindVariable(
     //Elsevier //AMS and LaTeX
     '\\varkappa ',
-    '&#1008;',
-    'kappa'
+    '&#1008;'
 )
 
-LatexCmds.rhov = LatexCmds.varrho = bindVariable('\\varrho ', '&#1009;', 'rho'); //Elsevier and 9573-13 //AMS and LaTeX
+LatexCmds.rhov = LatexCmds.varrho = bindVariable('\\varrho ', '&#1009;'); //Elsevier and 9573-13 //AMS and LaTeX
 
 //Greek constants, look best in non-italicized Times New Roman
 LatexCmds.pi = LatexCmds['π'] = () =>
-    new NonSymbolaSymbol('\\pi ', h.entityText('&pi;'), 'pi')
+    new NonSymbolaSymbol('\\pi ', h.entityText('&pi;'))
 LatexCmds.lambda = () =>
-    new NonSymbolaSymbol('\\lambda ', h.entityText('&lambda;'), 'lambda')
+    new NonSymbolaSymbol('\\lambda ', h.entityText('&lambda;'))
 
 //uppercase greek letters
 
@@ -961,9 +911,6 @@ class LatexFragment extends MathCommand {
             node.reflow()
             return undefined
         })
-    }
-    mathspeak() {
-        return latexMathParser.parse(this.latexStr).mathspeak()
     }
     parser() {
         var frag = latexMathParser.parse(this.latexStr).children()
@@ -1068,8 +1015,8 @@ function isBinaryOperator(node: NodeRef): boolean {
 }
 
 class PlusMinus extends BinaryOperator {
-    constructor(ch?: string, html?: ChildNode, mathspeak?: string) {
-        super(ch, html, undefined, mathspeak, true)
+    constructor(ch?: string, html?: ChildNode) {
+        super(ch, html, undefined, true)
     }
 
     contactWeld(cursor: Cursor, dir?: Direction) {
@@ -1096,18 +1043,12 @@ LatexCmds['+'] = class extends PlusMinus {
     constructor() {
         super('+', h.text('+'))
     }
-    mathspeak(): string {
-        return isBinaryOperator(this) ? 'plus' : 'positive'
-    }
 }
 
 //yes, these are different dashes, en-dash, em-dash, unicode minus, actual dash
 class MinusNode extends PlusMinus {
     constructor() {
         super('-', h.entityText('&minus;'))
-    }
-    mathspeak(): string {
-        return isBinaryOperator(this) ? 'minus' : 'negative'
     }
 }
 LatexCmds['−'] = LatexCmds['—'] = LatexCmds['–'] = LatexCmds['-'] = MinusNode
@@ -1116,16 +1057,16 @@ LatexCmds['±'] =
     LatexCmds.pm =
     LatexCmds.plusmn =
     LatexCmds.plusminus =
-    () => new PlusMinus('\\pm ', h.entityText('&plusmn;'), 'plus-or-minus')
+    () => new PlusMinus('\\pm ', h.entityText('&plusmn;'))
 LatexCmds.mp =
     LatexCmds.mnplus =
     LatexCmds.minusplus =
-    () => new PlusMinus('\\mp ', h.entityText('&#8723;'), 'minus-or-plus')
+    () => new PlusMinus('\\mp ', h.entityText('&#8723;'))
 
 CharCmds['*'] =
     LatexCmds.sdot =
     LatexCmds.cdot =
-    bindBinaryOperator('\\cdot ', '&middot;', '*', 'times'); //semantically should be &sdot;, but &middot; looks better
+    bindBinaryOperator('\\cdot ', '&middot;', '*'); //semantically should be &sdot;, but &middot; looks better
 
 class To extends BinaryOperator {
     constructor() {
@@ -1133,7 +1074,7 @@ class To extends BinaryOperator {
     }
     deleteTowards(dir: Direction, cursor: Cursor) {
         if (dir === L) {
-            var l = cursor[L] as MQNode
+            const l = cursor[L] as MQNode
             new Fragment(l, this).remove()
             cursor[L] = l[L]
             //@ts-ignore
@@ -1155,12 +1096,11 @@ class Inequality extends BinaryOperator {
     data: InequalityData
 
     constructor(data: InequalityData, strict: boolean) {
-        var strictness: '' | 'Strict' = strict ? 'Strict' : ''
+        const strictness: '' | 'Strict' = strict ? 'Strict' : ''
         super(
             data[`ctrlSeq${strictness}`],
             h.entityText(data[`htmlEntity${strictness}`]),
-            data[`text${strictness}`],
-            data[`mathspeak${strictness}`]
+            data[`text${strictness}`]
         )
 
         this.data = data
@@ -1169,13 +1109,12 @@ class Inequality extends BinaryOperator {
 
     swap(strict: boolean) {
         this.strict = strict
-        var strictness: '' | 'Strict' = strict ? 'Strict' : ''
+        const strictness: '' | 'Strict' = strict ? 'Strict' : ''
         this.ctrlSeq = this.data[`ctrlSeq${strictness}`]
         this.domFrag()
             .children()
             .replaceWith(domFrag(h.entityText(this.data[`htmlEntity${strictness}`])))
         this.textTemplate = [this.data[`text${strictness}`]]
-        this.mathspeakName = this.data[`mathspeak${strictness}`]
     }
     deleteTowards(dir: Direction, cursor: Cursor) {
         if (dir === L && !this.strict) {
@@ -1190,25 +1129,21 @@ class Inequality extends BinaryOperator {
     }
 }
 
-var less: InequalityData = {
+const less: InequalityData = {
     ctrlSeq: '\\le ',
     htmlEntity: '&le;',
     text: '≤',
-    mathspeak: 'less than or equal to',
     ctrlSeqStrict: '<',
     htmlEntityStrict: '&lt;',
     textStrict: '<',
-    mathspeakStrict: 'less than',
 }
-var greater: InequalityData = {
+const greater: InequalityData = {
     ctrlSeq: '\\ge ',
     htmlEntity: '&ge;',
     text: '≥',
-    mathspeak: 'greater than or equal to',
     ctrlSeqStrict: '>',
     htmlEntityStrict: '&gt;',
     textStrict: '>',
-    mathspeakStrict: 'greater than',
 }
 
 class Greater extends Inequality {
@@ -1218,7 +1153,7 @@ class Greater extends Inequality {
     createLeftOf(cursor: Cursor) {
         const cursorL = cursor[L]
         if (cursorL instanceof BinaryOperator && cursorL.ctrlSeq === '-') {
-            var l = cursorL
+            const l = cursorL
             cursor[L] = l[L]
             l.remove()
             //@ts-ignore
@@ -1246,7 +1181,7 @@ LatexCmds['≥'] =
 LatexCmds.infty =
     LatexCmds.infin =
     LatexCmds.infinity =
-    bindVanillaSymbol('\\infty ', '&infin;', 'infinity')
+    bindVanillaSymbol('\\infty ', '&infin;')
 LatexCmds['≠'] =
     LatexCmds.ne =
     LatexCmds.neq =
@@ -1254,10 +1189,10 @@ LatexCmds['≠'] =
 
 class Equality extends BinaryOperator {
     constructor() {
-        super('=', h.text('='), '=', 'equals')
+        super('=', h.text('='), '=')
     }
     createLeftOf(cursor: Cursor) {
-        var cursorL = cursor[L]
+        const cursorL = cursor[L]
         if (cursorL instanceof Inequality && cursorL.strict) {
             cursorL.swap(false)
             cursorL.bubble(function (node) {
@@ -1269,28 +1204,28 @@ class Equality extends BinaryOperator {
         super.createLeftOf(cursor)
     }
 }
+
 LatexCmds['='] = Equality
 
 LatexCmds['×'] = LatexCmds.times = bindBinaryOperator(
     '\\times ',
     '&times;',
-    '[x]',
-    'times'
+    '[x]'
 )
 
 LatexCmds['÷'] =
     LatexCmds.div =
     LatexCmds.divide =
     LatexCmds.divides =
-    bindBinaryOperator('\\div ', '&divide;', '[/]', 'over')
+    bindBinaryOperator('\\div ', '&divide;', '[/]')
 
 class Sim extends BinaryOperator {
     constructor() {
-        super('\\sim ', h.text('~'), '~', 'tilde')
+        super('\\sim ', h.text('~'), '~')
     }
     createLeftOf(cursor: Cursor) {
         if (cursor[L] instanceof Sim) {
-            var l = cursor[L] as MQNode
+            const l = cursor[L] as MQNode
             cursor[L] = l[L]
             l.remove()
             //@ts-ignore
@@ -1307,11 +1242,11 @@ class Sim extends BinaryOperator {
 
 class Approx extends BinaryOperator {
     constructor() {
-        super('\\approx ', h.entityText('&approx;'), '≈', 'approximately equal')
+        super('\\approx ', h.entityText('&approx;'), '≈')
     }
     deleteTowards(dir: Direction, cursor: Cursor) {
         if (dir === L) {
-            var l = cursor[L] as MQNode
+            const l = cursor[L] as MQNode
             new Fragment(l, this).remove()
             cursor[L] = l[L]
             //@ts-ignore

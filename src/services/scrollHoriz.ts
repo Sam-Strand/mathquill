@@ -97,6 +97,7 @@ class Controller_scrollHoriz extends Controller_mouse {
 
         const rootElt = this.root.domFrag().oneElement()
         const start = rootElt.scrollLeft
+
         animate(
             this.getScrollAnimationDuration(),
             (progress, scheduleNext, cancel) => {

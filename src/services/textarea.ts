@@ -103,7 +103,6 @@ class Controller extends Controller_scrollHoriz {
 
         domFrag(this.container).prepend(domFrag(textareaSpan))
         this.addEditableFocusBlurListeners()
-        this.updateMathspeak()
     }
     unbindEditablesEvents() {
         var ctrlr = this
@@ -170,45 +169,10 @@ class Controller extends Controller_scrollHoriz {
         }
     }
 
-    /** Set up for a static MQ field (i.e., create and attach the mathspeak element and initialize the focus state to blurred) */
+    /** Set up for a static MQ field (i.e., initialize the focus state to blurred) */
     setupStaticField() {
-        this.mathspeakSpan = h('span', { class: 'mq-mathspeak' })
-        domFrag(this.container).prepend(domFrag(this.mathspeakSpan))
-        this.updateMathspeak()
         this.blurred = true
         this.cursor.hide().parent.blur(this.cursor)
-    }
-
-    updateMathspeak() {
-        var ctrlr = this
-        // If the controller's ARIA label doesn't end with a punctuation mark, add a colon by default to better separate it from mathspeak.
-        var ariaLabel = ctrlr.getAriaLabel()
-        var labelWithSuffix = /[A-Za-z0-9]$/.test(ariaLabel)
-            ? ariaLabel + ':'
-            : ariaLabel
-        var mathspeak = ctrlr.root.mathspeak().trim()
-        this.aria.clear()
-
-        const textarea = ctrlr.getTextareaOrThrow()
-        // For static math, provide mathspeak in a visually hidden span to allow screen readers and other AT to traverse the content.
-        // For editable math, assign the mathspeak to the textarea's ARIA label (AT can use text navigation to interrogate the content).
-        // Be certain to include the mathspeak for only one of these, though, as we don't want to include outdated labels if a field's editable state changes.
-        // By design, also take careful note that the ariaPostLabel is meant to exist only for editable math (e.g. to serve as an evaluation or error message)
-        // so it is not included for static math mathspeak calculations.
-        // The mathspeakSpan should exist only for static math, so we use its presence to decide which approach to take.
-        if (!!ctrlr.mathspeakSpan) {
-            textarea.setAttribute('aria-label', '')
-            ctrlr.mathspeakSpan.textContent = (
-                labelWithSuffix +
-                ' ' +
-                mathspeak
-            ).trim()
-        } else {
-            textarea.setAttribute(
-                'aria-label',
-                (labelWithSuffix + ' ' + mathspeak + ' ' + ctrlr.ariaPostLabel).trim()
-            )
-        }
     }
 }
 

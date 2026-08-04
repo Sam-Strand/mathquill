@@ -6,24 +6,20 @@
     <meta name="viewport" content="width=624" />
 
     <title>MathQuill Performance Test Page</title>
-
-    <link rel="stylesheet" type="text/css" href="../build/mathquill.css" />
-
-    <script type="text/javascript" src="../test/support/jquery-1.5.2.js"></script>
     <script type="text/javascript">
         window.onerror = function (err) {
             document.querySelector('html').style.background = 'red'
         }
     </script>
-    <script type="text/javascript" src="../build/mathquill.js"></script>
 </head>
 
 <body>
     <p>Mean rendering time: <code id="report">loading...</code></p>
     <div id="mqs" style="width: 80%"></div>
 
-    <script>
-        var MQ = MathQuill.getInterface(3)
+    <script type="module">
+        import MathQuill from 'mathquill'
+        import 'mathquill/mathquill.css'
         var nmqs = 100
 
         var mqContainer = document.getElementById('mqs')
@@ -32,7 +28,7 @@
             var el = document.createElement('span')
             el.style.width = '10em'
             mqContainer.appendChild(el)
-            mqs.push(MQ.MathField(el))
+            mqs.push(MathQuill.MathField(el))
         }
 
         var report = document.getElementById('report')

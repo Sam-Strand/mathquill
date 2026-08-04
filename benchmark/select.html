@@ -6,9 +6,6 @@
     <meta name="viewport" content="width=624" />
 
     <title>MathQuill Select benchmark</title>
-
-    <link rel="stylesheet" type="text/css" href="support/home.css" />
-    <link rel="stylesheet" type="text/css" href="../build/mathquill.css" />
 </head>
 
 <body>
@@ -26,13 +23,12 @@
             </tr>
         </thead>
     </table>
-    <script type="text/javascript" src="../test/support/jquery-1.5.2.js"></script>
-    <script type="text/javascript" src="../build/mathquill.js"></script>
-    <script type="text/javascript">
-        var MQ = MathQuill.getInterface(MathQuill.getInterface.MAX)
+    <script type="module">
+        import MathQuill from 'mathquill'
+        import 'mathquill/mathquill.css'
 
         var editableElt = document.getElementById('editable')
-        var mq = MQ.MathField(editableElt)
+        var mq = MathQuill.MathField(editableElt)
         var reportElt = document.getElementById('report')
 
         function runOne(n) {

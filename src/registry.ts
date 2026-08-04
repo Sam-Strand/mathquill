@@ -1,4 +1,4 @@
-import type { EmbedOptionsData, EmbedOptions } from './shared_types'
+import type { EmbedOptionsData, EmbedOptions, LatexCmd } from './shared_types'
 
 // Конструкторы API-классов будут добавляться другими модулями
 export interface APIClasses {
@@ -19,3 +19,8 @@ export type APIClassBuilders = {
 
 export const API: APIClassBuilders = {}
 export const EMBEDS: Record<string, (data: EmbedOptionsData) => EmbedOptions> = {}
+
+export const LatexCmds: Record<string, LatexCmd> = {}
+
+export const CharCmds: Record<string, LatexCmd> = {}
+

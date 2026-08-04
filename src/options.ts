@@ -10,8 +10,6 @@ export type AutoDict = { _maxLength?: number;[id: string]: any }
  * (the latter is always set by the controller).
  */
 export class Options {
-    version: 3 = 3
-
     ignoreNextMousedown?: (_el: MouseEvent) => boolean
     substituteTextarea!: () => HTMLElement
 

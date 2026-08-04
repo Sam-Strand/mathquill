@@ -2,18 +2,16 @@
  * Abstract classes of text blocks
  ************************************************/
 import type { Direction } from '../types'
-import type { MathspeakOptions } from '../shared_types'
 import type { Controller } from '../services/textarea'
 import type { HTMLTagName } from '../dom'
-import type { IEditableField, IBaseMathQuill, APIClasses } from '../publicapi'
 
-import { NodeBase, Fragment, LatexCmds, MQNode } from '../tree'
+import { NodeBase, Fragment, MQNode } from '../tree'
 import { L, R } from '../types'
 import { h } from '../dom'
-import { DOMView, MathCommand, VanillaSymbol, MathBlock, RootMathBlock } from '../commands/math/core'
+import { MathCommand, VanillaSymbol, MathBlock, DOMView,  RootMathBlock } from '../commands/math/core'
 import { Anticursor, Cursor } from '../cursor'
 import { Parser } from '../services/parser.util'
-import { API } from '../registry'
+import { LatexCmds } from '../registry'
 
 /**
  * Blocks of plain text, with one or two TextPiece's as children.
@@ -23,7 +21,6 @@ import { API } from '../registry'
  */
 class TextBlock extends MQNode {
     ctrlSeq = '\\text'
-    ariaLabel = 'Text'
     replacedText?: string
     anticursorPosition?: number
 
@@ -111,21 +108,6 @@ class TextBlock extends MQNode {
         NodeBase.linkElementByCmdNode(out, this)
         return out
     }
-
-    mathspeakTemplate = ['StartText', 'EndText']
-    mathspeak(opts?: MathspeakOptions) {
-        if (opts && opts.ignoreShorthand) {
-            return (
-                this.mathspeakTemplate[0] +
-                ', ' +
-                this.textContents() +
-                ', ' +
-                this.mathspeakTemplate[1]
-            )
-        } else {
-            return this.textContents()
-        }
-    }
     isTextBlock() {
         return true
     }
@@ -135,13 +117,9 @@ class TextBlock extends MQNode {
     // the cursor
     moveTowards(dir: Direction, cursor: Cursor) {
         cursor.insAtDirEnd(-dir as Direction, this)
-        cursor.controller.aria
-            .queueDirEndOf(-dir as Direction)
-            .queue(cursor.parent, true)
     }
     moveOutOf(dir: Direction, cursor: Cursor) {
         cursor.insDirOf(dir, this)
-        cursor.controller.aria.queueDirOf(dir).queue(this)
     }
     unselectInto(dir: Direction, cursor: Cursor) {
         this.moveTowards(dir, cursor)
@@ -190,8 +168,6 @@ class TextBlock extends MQNode {
             node.reflow()
             return undefined
         })
-        // TODO needs tests
-        cursor.controller.aria.alert(ch)
     }
     writeLatex(cursor: Cursor, latex: string) {
         const cursorL = cursor[L]
@@ -360,10 +336,6 @@ class TextPiece extends MQNode {
         else new TextPiece(ch).createDir(-dir as Direction, cursor)
         return this.deleteTowards(dir, cursor)
     }
-
-    mathspeak() {
-        return this.textStr
-    }
     latex() {
         return this.textStr
     }
@@ -384,11 +356,9 @@ class TextPiece extends MQNode {
                 deletedChar = this.textStr[this.textStr.length - 1]
                 this.textStr = this.textStr.slice(0, -1)
             }
-            cursor.controller.aria.queue(deletedChar)
         } else {
             this.remove()
             cursor[dir] = this[dir]
-            cursor.controller.aria.queue(this.textStr)
         }
     }
 
@@ -431,15 +401,11 @@ LatexCmds.text =
 
 function makeTextBlock(
     latex: string,
-    ariaLabel: string,
     tagName: HTMLTagName,
     attrs: { style?: string; class: string }
 ) {
     return class extends TextBlock {
         ctrlSeq = latex
-        mathspeakTemplate = ['Start' + ariaLabel, 'End' + ariaLabel]
-        ariaLabel = ariaLabel
-
         html() {
             const out = h(tagName, attrs, [h.text(this.textContents())])
             this.setDOM(out)
@@ -455,38 +421,36 @@ LatexCmds.em =
     LatexCmds.emph =
     LatexCmds.textit =
     LatexCmds.textsl =
-    makeTextBlock('\\textit', 'Italic', 'i', { class: 'mq-text-mode' })
+    makeTextBlock('\\textit', 'i', { class: 'mq-text-mode' })
 
 LatexCmds.strong =
     LatexCmds.bold =
     LatexCmds.textbf =
-    makeTextBlock('\\textbf', 'Bold', 'b', { class: 'mq-text-mode' })
+    makeTextBlock('\\textbf', 'b', { class: 'mq-text-mode' })
 
 LatexCmds.sf = LatexCmds.textsf = makeTextBlock(
     '\\textsf',
-    'Sans serif font',
     'span',
     { class: 'mq-sans-serif mq-text-mode' }
 )
 
 LatexCmds.tt = LatexCmds.texttt = makeTextBlock(
     '\\texttt',
-    'Mono space font',
     'span',
     { class: 'mq-monospace mq-text-mode' }
 )
 
-LatexCmds.textsc = makeTextBlock('\\textsc', 'Variable font', 'span', {
+LatexCmds.textsc = makeTextBlock('\\textsc', 'span', {
     style: 'font-variant:small-caps',
     class: 'mq-text-mode',
 })
 
-LatexCmds.uppercase = makeTextBlock('\\uppercase', 'Uppercase', 'span', {
+LatexCmds.uppercase = makeTextBlock('\\uppercase', 'span', {
     style: 'text-transform:uppercase',
     class: 'mq-text-mode',
 })
 
-LatexCmds.lowercase = makeTextBlock('\\lowercase', 'Lowercase', 'span', {
+LatexCmds.lowercase = makeTextBlock('\\lowercase', 'span', {
     style: 'text-transform:lowercase',
     class: 'mq-text-mode',
 })
@@ -534,29 +498,6 @@ class RootTextBlock extends RootMathBlock {
             if (ch === '<') html = h.entityText('&lt;')
             else if (ch === '>') html = h.entityText('&gt;')
             new VanillaSymbol(ch, html).createLeftOf(cursor)
-        }
-    }
-}
-
-API.TextField = function (APIClasses: APIClasses) {
-    return class TextField extends APIClasses.EditableField {
-        static RootBlock = RootTextBlock
-        __mathquillify() {
-            super.mathquillify('mq-editable-field mq-text-mode')
-            return this
-        }
-        latex(): string
-        latex(l: string): IEditableField
-        latex(latex?: string) {
-            if (latex) {
-                this.__controller.renderLatexText(latex)
-                if (this.__controller.blurred)
-                    this.__controller.cursor.hide().parent.blur()
-
-                const _this: IBaseMathQuill = this; // just to help help TS out
-                return _this
-            }
-            return this.__controller.exportLatex()
         }
     }
 }

@@ -59,30 +59,6 @@ $mq-border-color: $mq-color-text !default;
 $mq-border-style: solid !default;
 
 // ==========================================================================
-// A11y / Hidden elements
-// ==========================================================================
-
-.mq-aria-alert {
-    position: absolute;
-    left: -1000px;
-    top: -1000px;
-    width: 0px;
-    height: 0px;
-    text-align: left;
-    overflow: hidden;
-}
-
-.mq-mathspeak {
-    position: absolute;
-    left: -1000px;
-    top: -1000px;
-    width: 0px;
-    height: 0px;
-    text-align: left;
-    overflow: hidden;
-}
-
-// ==========================================================================
 // Font-face
 // ==========================================================================
 

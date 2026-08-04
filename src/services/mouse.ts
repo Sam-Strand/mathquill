@@ -74,11 +74,6 @@ class Controller_mouse extends Controller_latex {
         function onDocumentMouseMove(e: MouseEvent) {
             if (!cursor.anticursor) cursor.startSelection()
             ctrlr.seek(lastMousemoveTarget, e.clientX, e.clientY).cursor.select()
-            if (cursor.selection)
-                cursor.controller.aria
-                    .clear()
-                    .queue(cursor.selection.join('mathspeak') + ' selected')
-                    .alert()
             lastMousemoveTarget = null
         }
         // outside rootElement, the MathQuill node corresponding to the target (if any)
@@ -95,7 +90,6 @@ class Controller_mouse extends Controller_latex {
         function updateCursor() {
             if (ctrlr.editable) {
                 cursor.show()
-                cursor.controller.aria.queue(cursor.parent).alert()
             } else {
                 domFrag(textareaSpan).detach()
             }

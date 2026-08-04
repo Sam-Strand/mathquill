@@ -1,7 +1,7 @@
-import type { APIClasses } from './publicapi'
+import type { APIClasses } from '../publicapi'
 
-import { API } from './registry'
-import { domFrag } from './domFragment'
+import { API } from '../registry'
+import { domFrag } from '../domFragment'
 
 API.InnerMathField = function (APIClasses: APIClasses) {
     return class extends APIClasses.MathField {

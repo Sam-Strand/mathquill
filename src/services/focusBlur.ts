@@ -40,7 +40,6 @@ class Controller_focusBlur extends Controller_exportText {
 
     handleTextareaFocusEditable = () => {
         const cursor = this.cursor
-        this.updateMathspeak()
         this.blurred = false
         clearTimeout(this.blurTimeout)
         domFrag(this.container).addClass('mq-focused')
@@ -68,7 +67,6 @@ class Controller_focusBlur extends Controller_exportText {
             }); // none, intentional blur: #264
             this.cursor.clearSelection().endSelection()
             this.blur()
-            this.updateMathspeak()
             this.scrollHoriz()
         })
         window.addEventListener('blur', this.handleWindowBlur)
@@ -95,7 +93,6 @@ class Controller_focusBlur extends Controller_exportText {
         if (this.cursor.selection)
             this.cursor.selection.domFrag().addClass('mq-blur')
         this.blur()
-        this.updateMathspeak()
     }
 
     blur() {

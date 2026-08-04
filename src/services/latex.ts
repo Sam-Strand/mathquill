@@ -149,7 +149,6 @@ class Controller_latex extends Controller_keystroke {
             if (charNode.ctrlSeq !== newText) {
                 charNode.ctrlSeq = newText
                 charNode.domFrag().oneElement().textContent = newText
-                charNode.mathspeakName = newText
             }
         }
 
@@ -242,7 +241,6 @@ class Controller_latex extends Controller_keystroke {
         if (!root.getEnd(L) || !root.getEnd(R) || oldLatex !== latex) {
             const update =  this.updateLatexMathEfficiently(latex, oldLatex)
             update || this.renderLatexMathFromScratch(latex)
-            this.updateMathspeak()
         }
         cursor.insAtRightEnd(root)
     }

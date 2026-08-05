@@ -152,7 +152,6 @@ class NodeBase {
     _el: Element | Text | undefined
     id = NodeBase.uniqueNodeId()
     ctrlSeq: string | undefined
-    textTemplate: string[] | undefined
     sides:
         | {
             [L]: { ch: string; ctrlSeq: string }

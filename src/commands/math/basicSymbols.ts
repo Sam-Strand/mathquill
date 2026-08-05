@@ -1106,7 +1106,6 @@ class Inequality extends BinaryOperator {
         this.domFrag()
             .children()
             .replaceWith(domFrag(h.entityText(this.data[`htmlEntity${strictness}`])))
-        this.textTemplate = [this.data[`text${strictness}`]]
     }
     deleteTowards(dir: Direction, cursor: Cursor) {
         if (dir === L && !this.strict) {

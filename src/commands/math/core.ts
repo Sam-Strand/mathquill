@@ -279,25 +279,6 @@ export class MathCommand extends MathElement {
             return latex + '{' + (child.latex() || ' ') + '}'
         })
     }
-
-    textTemplate = ['']
-
-    text() {
-        var cmd = this,
-            i = 0
-        return cmd.foldChildren(cmd.textTemplate[i], function (text, child) {
-            i += 1
-            var child_text = child.text()
-            if (
-                text &&
-                cmd.textTemplate[i] === '(' &&
-                child_text[0] === '(' &&
-                child_text.slice(-1) === ')'
-            )
-                return text + child_text.slice(1, -1) + cmd.textTemplate[i]
-            return text + child_text + (cmd.textTemplate[i] || '')
-        })
-    }
 }
 
 /**
@@ -354,9 +335,6 @@ export class MQSymbol extends MathCommand {
 
     latex() {
         return this.ctrlSeq || ''
-    }
-    text() {
-        return this.textTemplate.join('')
     }
     placeCursor() { }
     isEmpty() {

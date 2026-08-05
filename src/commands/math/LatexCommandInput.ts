@@ -28,7 +28,6 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
             ]),
         ])
     )
-    textTemplate = ['\\']
     createBlocks() {
         super.createBlocks()
         const endsL = this.getEnd(L)

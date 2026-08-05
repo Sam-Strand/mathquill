@@ -496,8 +496,6 @@ class SubscriptCommand extends SupSub {
         ])
     )
 
-    textTemplate = ['_']
-
     finalizeTree() {
         this.downInto = this.sub = this.getEnd(L)
         this.sub.upOutOf = insLeftOfMeUnlessAtEnd
@@ -519,7 +517,6 @@ LatexCmds.superscript =
             ])
         )
 
-        textTemplate = ['^(', ')']
         finalizeTree() {
             this.upInto = this.sup = this.getEnd(R)
             this.sup.downOutOf = insLeftOfMeUnlessAtEnd
@@ -652,7 +649,6 @@ var Fraction =
                     ]),
                 ])
             )
-            textTemplate = ['(', ')/(', ')']
             finalizeTree() {
                 const endsL = this.getEnd(L)
                 const endsR = this.getEnd(R)
@@ -779,8 +775,6 @@ LatexCmds.hat = class Hat extends MathCommand {
             h.block('span', { class: 'mq-hat-stem' }, blocks[0]),
         ])
     )
-
-    textTemplate = ['hat(', ')']
 }
 
 class NthRoot extends SquareRoot {
@@ -795,8 +789,6 @@ class NthRoot extends SquareRoot {
             ]),
         ])
     )
-
-    textTemplate = ['sqrt[', '](', ')']
     latex() {
         return (
             '\\sqrt[' + this.getEnd(L).latex() + ']{' + this.getEnd(R).latex() + '}'
@@ -814,20 +806,20 @@ LatexCmds.cbrt = class extends NthRoot {
 }
 
 class DiacriticAbove extends MathCommand {
-    constructor(ctrlSeq: string, html: ChildNode, textTemplate?: string[]) {
+    constructor(ctrlSeq: string, html: ChildNode) {
         var domView = new DOMView(1, (blocks) =>
             h('span', { class: 'mq-non-leaf' }, [
                 h('span', { class: 'mq-diacritic-above' }, [html]),
                 h.block('span', { class: 'mq-diacritic-stem' }, blocks[0]),
             ])
         )
-        super(ctrlSeq, domView, textTemplate)
+        super(ctrlSeq, domView)
     }
 }
 LatexCmds.vec = () =>
-    new DiacriticAbove('\\vec', h.entityText('&rarr;'), ['vec(', ')'])
+    new DiacriticAbove('\\vec', h.entityText('&rarr;'))
 LatexCmds.tilde = () =>
-    new DiacriticAbove('\\tilde', h.text('~'), ['tilde(', ')'])
+    new DiacriticAbove('\\tilde', h.text('~'))
 
 class DelimsNode extends MathCommand {
     delimFrags: Ends<DOMFragment>
@@ -861,7 +853,7 @@ class Bracket extends DelimsNode {
         ctrlSeq: string,
         end: string
     ) {
-        super('\\left' + ctrlSeq, undefined, [open, close])
+        super('\\left' + ctrlSeq, undefined)
         this.side = side
         this.sides = {
             [L]: { ch: open, ctrlSeq: ctrlSeq },
@@ -1298,8 +1290,6 @@ class Binomial extends DelimsNode {
             ),
         ])
     )
-
-    textTemplate = ['choose(', ',', ')']
 }
 
 LatexCmds.binom = LatexCmds.binomial = Binomial

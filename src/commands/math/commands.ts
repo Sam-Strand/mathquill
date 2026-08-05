@@ -726,15 +726,22 @@ var LiveFraction =
 const AnsBuilder = () =>
     new MQSymbol(
         '\\operatorname{ans}',
-        h('span', { class: 'mq-ans' }, [h.text('ans')]),
-        'ans'
+        h(
+            'span',
+            { class: 'mq-ans' },
+            [h.text('ans')]
+        )
     )
 LatexCmds.ans = AnsBuilder
 
 const PercentOfBuilder = () =>
     new MQSymbol(
         '\\%\\operatorname{of}',
-        h('span', { class: 'mq-nonSymbola mq-operator-name' }, [h.text('% of ')])
+        h(
+            'span',
+            { class: 'mq-nonSymbola mq-operator-name' },
+            [h.text('% of ')]
+        )
     )
 LatexCmds.percent = LatexCmds.percentof = PercentOfBuilder
 

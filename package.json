@@ -38,10 +38,10 @@
         "mocha": ">=2.4.1",
         "sass": "^1.101.0",
         "typescript": "^6.0.3",
-        "vite": "^8.2.1",
+        "vite": "^8.2.2",
         "vite-plugin-dts": "^5.0.3"
     },
     "peerDependencies": {
-        "vue": "^3.0.0"
+        "vue": "^3.5.41"
     }
 }

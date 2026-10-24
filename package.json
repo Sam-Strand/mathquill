@@ -5,7 +5,8 @@
   "license": "MPL-2.0",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "vite build"
+    "build": "vite build",
+    "typecheck": "tsc --noEmit -p ."
   },
   "repository": {
     "type": "git",
@@ -14,27 +15,27 @@
   "type": "module",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "development": "./src/index.ts",
-      "import": "./dist/mathquill.js",
-      "types": "./dist/index.d.ts"
+      "default": "./dist/index.js"
+    },
+    "./vue": {
+      "types": "./dist/vue/index.d.ts",
+      "development": "./src/vue/index.ts",
+      "default": "./dist/vue.js"
     },
     "./mathquill.css": {
       "development": "./src/styles/main.scss",
-      "import": "./dist/mathquill.css"
-    },
-    "./vue": {
-      "development": "./src/vue/index.ts",
-      "import": "./dist/vue.js"
+      "default": "./dist/mathquill.css"
     }
   },
   "devDependencies": {
-    "@types/mocha": "^10.0.10",
     "@vitejs/plugin-vue": "^6.0.10",
     "@vue/language-core": "^3.3.13",
-    "mocha": "^12.0.3",
     "sass": "^1.106.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
+    "hjson": "workspace:*",
     "vite-plugin-dts": "^5.1.2"
   },
   "peerDependencies": {

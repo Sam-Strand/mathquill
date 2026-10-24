@@ -1,78 +1,37 @@
 /************************************
- * Symbols for Advanced Mathematics
+ * Symbols for advanced mathematics (set theory, logic, arrows, ...),
+ * mostly defined as data in symbols-config.hjson.
  ***********************************/
+import { h } from '../../core/dom'
+import { Parser } from '../../core/parser'
+import type { MQNode } from '../../tree/node'
+import { latexCommands } from '../registry'
+import { BinaryOperator, ParseOnlyCommand, bindBinaryOperator, bindVanillaSymbol } from './core'
+import config from './symbols-config.hjson'
 
-import type { MQNodeBuilderNoParam } from '../../shared_types'
-
-import { isMQNodeClass } from '../../tree'
-import { LatexCmds } from '../../registry'
-import { MathCommand, bindVanillaSymbol, bindBinaryOperator, BinaryOperator } from '../../commands/math/core'
-import { Cursor } from '../../cursor'
-import { Parser } from '../../services/parser.util'
-import { h } from '../../dom'
-
-
-type SymbolDefinition = {
-    aliases: string[]
-    latex: string
-    html: string
+for (const { aliases, latex, html } of config.binarySymbols) {
+    latexCommands.define(aliases, bindBinaryOperator(latex, html))
+}
+for (const { aliases, latex, html } of config.vanillaSymbols) {
+    latexCommands.define(aliases, bindVanillaSymbol(latex, html))
 }
 
-import config from './symbols-config.json'
+// operators whose HTML entity is named like the command
+latexCommands.define(['notin', 'cong', 'equiv', 'oplus', 'otimes'], (name) => new BinaryOperator('\\' + name + ' ', h.entityText('&' + name + ';')))
 
-
-const registerSymbols = (definitions: SymbolDefinition[], type: string): void => {
-    definitions.forEach(({ aliases, latex, html }) => {
-        const binder = type === 'binary' ? bindBinaryOperator : bindVanillaSymbol
-        const symbol = binder(latex, html)
-        
-        aliases.forEach((alias) => {
-            LatexCmds[alias] = symbol
-        })
-    })
-}
-
-const registerDynamicOperators = (): void => {
-    const dynamicOperators = ['notin', 'cong', 'equiv', 'oplus', 'otimes']
-    const binder = (latex: string) => 
-        new BinaryOperator('\\' + latex + ' ', h.entityText('&' + latex + ';'))
-    
-    dynamicOperators.forEach(op => {
-        LatexCmds[op] = binder(op)
-    })
-}
-
-// Register all symbols
-registerSymbols(config.binarySymbols, 'binary')
-registerSymbols(config.vanillaSymbols, 'vanilla')
-registerDynamicOperators()
-
-/**
- * \mathbb{} command - handles single-letter blackboard bold
- */
-LatexCmds.mathbb = class extends MathCommand {
-    createLeftOf(_cursor: Cursor) {}
-    
-    numBlocks() {
-        return 1 as const
+/** `\mathbb{R}` etc.: blackboard bold for single capital letters */
+latexCommands.define(
+    'mathbb',
+    class extends ParseOnlyCommand {
+        parser() {
+            const { string, regex, optWhitespace } = Parser
+            return optWhitespace
+                .then(string('{'))
+                .then(optWhitespace)
+                .then(regex(/^[NPZQRCH]/))
+                .skip(optWhitespace)
+                .skip(string('}'))
+                .map((c): MQNode => latexCommands.create(c)!)
+        }
     }
-    
-    parser() {
-        const { string, regex, optWhitespace } = Parser;
-        
-        return optWhitespace
-            .then(string('{'))
-            .then(optWhitespace)
-            .then(regex(/^[NPZQRCH]/))
-            .skip(optWhitespace)
-            .skip(string('}'))
-            .map((c: string) => {
-                const cmd = LatexCmds[c]
-                if (isMQNodeClass(cmd)) {
-                    return new cmd()
-                } else {
-                    return (cmd as MQNodeBuilderNoParam)()
-                }
-            })
-    }
-}
+)

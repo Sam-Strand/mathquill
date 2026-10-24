@@ -1,108 +1,89 @@
 <template>
-    <span ref="mathFieldRef"></span>
+    <span ref="el"></span>
 </template>
 
-<script setup>
-import { ref, onMounted, watch, onBeforeUnmount } from 'vue'
+<script setup lang="ts">
+/**
+ * <MathQuillEditor v-model="latex" :config="{ ... }" />
+ *
+ * An editable math field bound to a LaTeX string, with its own
+ * undo/redo history (Ctrl+Z / Ctrl+Y).
+ */
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import MathQuill from '..'
+import type { Config, MathFieldApi } from '..'
 
-const props = defineProps({
-    modelValue: {
-        type: String,
-        default: ''
-    },
-    config: {
-        type: Object,
-        default: () => ({})
-    }
+const props = withDefaults(defineProps<{ modelValue?: string; config?: Config }>(), {
+    modelValue: '',
+    config: () => ({}),
 })
+const emit = defineEmits<{ 'update:modelValue': [latex: string] }>()
 
-const emit = defineEmits(['update:modelValue'])
-
-const mathFieldRef = ref(null)
-let mathField = null
-let isRestoring = false
-const history = ['']
-let historyIndex = 0
 const MAX_HISTORY = 100
 
-function applyHistoryState(index) {
-    if (index >= 0 && index < history.length) {
-        isRestoring = true
-        historyIndex = index
-        const latex = history[historyIndex]
-        mathField.latex(latex)
-        isRestoring = false
-    }
+const el = ref<HTMLElement | null>(null)
+let field: MathFieldApi | null = null
+let restoring = false
+const history: string[] = ['']
+let historyIndex = 0
+
+function restore(index: number) {
+    if (!field || index < 0 || index >= history.length) return
+    restoring = true
+    historyIndex = index
+    field.latex(history[index])
+    restoring = false
 }
-function onKeydown(e) {
-    const active = document.activeElement
-    if (!mathFieldRef.value?.contains(active)) return
 
-    // Ctrl+Z - Undo
-    if (e.code === 'KeyZ' && e.ctrlKey) {
-        e.preventDefault()
-        if (historyIndex > 0) {
-            applyHistoryState(historyIndex - 1)
-        }
-    }
+function record(latex: string) {
+    history.splice(historyIndex + 1) // drop the redo branch
+    history.push(latex)
+    if (history.length > MAX_HISTORY) history.shift()
+    historyIndex = history.length - 1
+}
 
-    // Ctrl+Y
-    if (e.code === 'KeyY' && e.ctrlKey) {
+function onKeydown(e: KeyboardEvent) {
+    if (!e.ctrlKey) return
+    if (e.code === 'KeyZ') {
         e.preventDefault()
-        if (historyIndex < history.length - 1) {
-            applyHistoryState(historyIndex + 1)
-        }
+        restore(historyIndex - 1)
+    } else if (e.code === 'KeyY') {
+        e.preventDefault()
+        restore(historyIndex + 1)
     }
 }
 
 onMounted(() => {
-    const el = mathFieldRef.value
-    if (!el) return
-
-    const defaultConfig = {
+    if (!el.value) return
+    const userHandlers = props.config.handlers
+    field = MathQuill.MathField(el.value, {
         spaceBehavesLikeTab: true,
+        ...props.config,
         handlers: {
-            edit: () => {
-                if (isRestoring) return
-
-                const latex = mathField.latex()
-
-                if (historyIndex < history.length - 1) {
-                    history.splice(historyIndex + 1)
-                }
-
-                history.push(latex)
-
-                if (history.length > MAX_HISTORY) {
-                    history.shift()
-                }
-
-                historyIndex = history.length - 1
+            ...userHandlers,
+            edit: (mq) => {
+                userHandlers?.edit?.(mq)
+                if (restoring) return
+                const latex = mq.latex()
+                record(latex)
                 emit('update:modelValue', latex)
-            }
+            },
         },
-        ...props.config
-    }
-
-    mathField = MathQuill.MathField(el, defaultConfig)
-
-    if (props.modelValue) {
-        mathField.latex(props.modelValue)
-    }
-    document.addEventListener('keydown', onKeydown)
+    })
+    if (props.modelValue) field.latex(props.modelValue)
+    el.value.addEventListener('keydown', onKeydown)
 })
 
 watch(
     () => props.modelValue,
-    (newLatex) => {
-        if (mathField && mathField.latex() !== newLatex) {
-            mathField.latex(newLatex)
-        }
+    (latex) => {
+        if (field && field.latex() !== latex) field.latex(latex)
     }
 )
 
 onBeforeUnmount(() => {
-    document.removeEventListener('keydown', onKeydown)
+    el.value?.removeEventListener('keydown', onKeydown)
+    field?.revert()
+    field = null
 })
 </script>

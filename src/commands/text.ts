@@ -1,359 +1,319 @@
 /*************************************************
- * Abstract classes of text blocks
+ * Text mode: `\text{...}` blocks inside math, and the root of a TextField
+ * (plain text with `$...$` math islands).
  ************************************************/
-import type { Direction } from '../types'
-import type { Controller } from '../services/textarea'
-import type { HTMLTagName } from '../dom'
-
-import { NodeBase, Fragment, MQNode } from '../tree'
-import { L, R } from '../types'
-import { h } from '../dom'
-import { MathCommand, VanillaSymbol, MathBlock, DOMView,  RootMathBlock } from '../commands/math/core'
-import { Anticursor, Cursor } from '../cursor'
-import { Parser } from '../services/parser.util'
-import { LatexCmds } from '../registry'
+import { L, R, opp, type Direction } from '../core/direction'
+import { h, type HTMLTagName } from '../core/dom'
+import { Parser } from '../core/parser'
+import { MQNode } from '../tree/node'
+import { Fragment } from '../tree/fragment'
+import { linkCommandElement } from '../tree/domLink'
+import { Anticursor, type Cursor } from '../tree/cursor'
+import type { Controller } from '../controller/Controller'
+import { latexCommands } from './registry'
+import { DOMView, MathBlock, MathCommand, RootMathBlock, VanillaSymbol } from './math/core'
 
 /**
- * Blocks of plain text, with one or two TextPiece's as children.
- * Represents flat strings of typically serif-font Roman characters, as
- * opposed to hierchical, nested, tree-structured math.
- * Wraps a single HTMLSpanElement.
+ * A run of plain text inside math. Its children are one or more TextPieces
+ * (fused into one on blur); it renders as a single span.
  */
-class TextBlock extends MQNode {
+export class TextBlock extends MQNode {
     ctrlSeq = '\\text'
-    replacedText?: string
-    anticursorPosition?: number
+    /** Text typed over a selection (from a LatexCommandInput or a replaced fragment). */
+    private replacedText: string | undefined
+    /** Where mouse selection started, as an offset in the text. */
+    private anticursorPosition: number | undefined
 
-    replaces(replacedText: Fragment | string) {
-        if (replacedText instanceof Fragment) {
-            this.replacedText = replacedText.remove().domFrag().text()
-        } else if (typeof replacedText === 'string')
-            this.replacedText = replacedText
+    replaces(replaced: Fragment | string): void {
+        this.replacedText = replaced instanceof Fragment ? replaced.remove().domFrag().text() : replaced
     }
 
-    setDOMFrag(el: Element | undefined) {
+    /** Also points the first TextPiece at the rendered text node. */
+    setDOM(el: Element | Text | undefined): this {
         super.setDOM(el)
-        const endsL = this.getEnd(L)
-        if (endsL) {
+        const first = this.getEnd(L)
+        if (first) {
             const children = this.domFrag().children()
-            if (!children.isEmpty()) {
-                endsL.setDOM(children.oneText())
-            }
+            if (!children.isEmpty()) first.setDOM(children.oneText())
         }
         return this
     }
 
-    createLeftOf(cursor: Cursor) {
-        var textBlock = this
+    createLeftOf(cursor: Cursor): void {
         super.createLeftOf(cursor)
+        cursor.insAtRightEnd(this)
 
-        cursor.insAtRightEnd(textBlock)
+        if (this.replacedText) {
+            for (const ch of this.replacedText) this.write(cursor, ch)
+        }
 
-        if (textBlock.replacedText)
-            for (var i = 0; i < textBlock.replacedText.length; i += 1)
-                textBlock.write(cursor, textBlock.replacedText.charAt(i))
-
-        const textBlockR = textBlock[R]
-        if (textBlockR) textBlockR.siblingCreated(cursor.options, L)
-        const textBlockL = textBlock[L]
-        if (textBlockL) textBlockL.siblingCreated(cursor.options, R)
-        textBlock.bubble(function (node) {
-            node.reflow()
-            return undefined
-        })
+        const after = this[R]
+        if (after) after.siblingCreated(cursor.options, L)
+        const before = this[L]
+        if (before) before.siblingCreated(cursor.options, R)
+        this.bubble((node) => node.reflow())
     }
 
-    parser() {
-        var textBlock = this
-
-        // TODO: correctly parse text mode
-        var string = Parser.string
-        var regex = Parser.regex
-        var optWhitespace = Parser.optWhitespace
-        return optWhitespace
-            .then(string('{'))
-            .then(regex(/^[^}]*/))
-            .skip(string('}'))
-            .map(function (text) {
+    parser(): Parser<MQNode | Fragment> {
+        // TODO: properly parse text mode (nested braces, escapes)
+        return Parser.optWhitespace
+            .then(Parser.string('{'))
+            .then(Parser.regex(/^[^}]*/))
+            .skip(Parser.string('}'))
+            .map((text): MQNode | Fragment => {
                 if (text.length === 0) return new Fragment(0, 0)
-
-                new TextPiece(text).adopt(textBlock, 0, 0)
-                return textBlock
+                new TextPiece(text).adopt(this, 0, 0)
+                return this
             })
     }
 
-    textContents() {
-        return this.foldChildren('', function (text, child) {
-            return text + (child as TextPiece).textStr
-        })
+    textContents(): string {
+        return this.foldChildren('', (text, child) => text + (child as TextPiece).textStr)
     }
-    text() {
+
+    text(): string {
         return '"' + this.textContents() + '"'
     }
-    latex() {
-        var contents = this.textContents()
+
+    latex(): string {
+        const contents = this.textContents()
         if (contents.length === 0) return ''
-        return (
-            this.ctrlSeq +
-            '{' +
-            contents.replace(/\\/g, '\\backslash ').replace(/[{}]/g, '\\$&') +
-            '}'
-        )
+        return this.ctrlSeq + '{' + contents.replace(/\\/g, '\\backslash ').replace(/[{}]/g, '\\$&') + '}'
     }
-    html() {
-        const out = h('span', { class: 'mq-text-mode' }, [
-            h.text(this.textContents()),
-        ])
+
+    /** Tag and attributes of the rendered element. */
+    protected element(): { tag: HTMLTagName; attrs: { class: string; style?: string } } {
+        return { tag: 'span', attrs: { class: 'mq-text-mode' } }
+    }
+
+    html(): Node {
+        const { tag, attrs } = this.element()
+        const out = h(tag, attrs, [h.text(this.textContents())])
         this.setDOM(out)
-        NodeBase.linkElementByCmdNode(out, this)
+        linkCommandElement(out, this)
         return out
     }
-    isTextBlock() {
-        return true
-    }
 
-    // editability methods: called by the cursor for editing, cursor movements,
-    // and selection of the MathQuill tree, these all take in a direction and
-    // the cursor
-    moveTowards(dir: Direction, cursor: Cursor) {
-        cursor.insAtDirEnd(-dir as Direction, this)
+    // ---- editing -----------------------------------------------------------
+
+    moveTowards(dir: Direction, cursor: Cursor): void {
+        cursor.insAtDirEnd(opp(dir), this)
     }
-    moveOutOf(dir: Direction, cursor: Cursor) {
+    moveOutOf(dir: Direction, cursor: Cursor): void {
         cursor.insDirOf(dir, this)
     }
-    unselectInto(dir: Direction, cursor: Cursor) {
+    unselectInto(dir: Direction, cursor: Cursor): void {
         this.moveTowards(dir, cursor)
     }
-
-    // TODO: make these methods part of a shared mixin or something.
-    selectTowards(dir: Direction, cursor: Cursor) {
-        MathCommand.prototype.selectTowards.call(this, dir, cursor)
+    selectTowards(dir: Direction, cursor: Cursor): void {
+        cursor[opp(dir)] = this
+        cursor[dir] = this[dir]
     }
-    deleteTowards(dir: Direction, cursor: Cursor) {
-        MathCommand.prototype.deleteTowards.call(this, dir, cursor)
+    deleteTowards(dir: Direction, cursor: Cursor): void {
+        if (this.isEmpty()) cursor[dir] = this.remove()[dir]
+        else this.moveTowards(dir, cursor)
     }
-
-    selectOutOf(dir: Direction, cursor: Cursor) {
+    selectOutOf(dir: Direction, cursor: Cursor): void {
         cursor.insDirOf(dir, this)
     }
-    deleteOutOf(_dir: Direction, cursor: Cursor) {
-        // backspace and delete at ends of block don't unwrap
+    deleteOutOf(_dir: Direction, cursor: Cursor): void {
+        // Backspace/Del at the edges don't unwrap
         if (this.isEmpty()) cursor.insRightOf(this)
     }
-    write(cursor: Cursor, ch: string) {
+
+    write(cursor: Cursor, ch: string): void {
         cursor.show().deleteSelection()
 
         if (ch !== '$') {
-            let cursorL = cursor[L]
+            const cursorL = cursor[L]
             if (!cursorL) new TextPiece(ch).createLeftOf(cursor)
             else if (cursorL instanceof TextPiece) cursorL.appendText(ch)
         } else if (this.isEmpty()) {
             cursor.insRightOf(this)
             new VanillaSymbol('\\$', h.text('$')).createLeftOf(cursor)
-        } else if (!cursor[R]) cursor.insRightOf(this)
-        else if (!cursor[L]) cursor.insLeftOf(this)
-        else {
-            // split apart
-            var leftBlock = new TextBlock()
-            var leftPc = this.getEnd(L)
+        } else if (!cursor[R]) {
+            cursor.insRightOf(this)
+        } else if (!cursor[L]) {
+            cursor.insLeftOf(this)
+        } else {
+            // `$` in the middle: split into two text blocks
+            const leftBlock = new TextBlock()
+            const leftPc = this.getEnd(L)
             if (leftPc) {
                 leftPc.disown().domFrag().detach()
                 leftPc.adopt(leftBlock, 0, 0)
             }
-
             cursor.insLeftOf(this)
-            super.createLeftOf.call(leftBlock, cursor); // micro-optimization, not for correctness
+            leftBlock.createDir(L, cursor)
         }
-        this.bubble(function (node) {
-            node.reflow()
-            return undefined
-        })
+        this.bubble((node) => node.reflow())
     }
-    writeLatex(cursor: Cursor, latex: string) {
+
+    writeLatex(cursor: Cursor, latex: string): void {
         const cursorL = cursor[L]
         if (!cursorL) new TextPiece(latex).createLeftOf(cursor)
         else if (cursorL instanceof TextPiece) cursorL.appendText(latex)
-        this.bubble(function (node) {
-            node.reflow()
-            return undefined
-        })
+        this.bubble((node) => node.reflow())
     }
 
-    seek(clientX: number, cursor: Cursor) {
+    seek(clientX: number, cursor: Cursor): void {
         cursor.hide()
-        var textPc = TextBlockFuseChildren(this)
+        const textPc = fuseChildren(this)
         if (!textPc) return
 
-        // insert cursor at approx position in DOMTextNode
-        const textNode = this.domFrag().children().oneText()
+        // insert the cursor at the approximate position in the text node
         const range = document.createRange()
-        range.selectNodeContents(textNode)
-        var rects = range.getClientRects()
+        range.selectNodeContents(this.domFrag().children().oneText())
+        const rects = range.getClientRects()
         if (rects.length === 1) {
             const { width, left } = rects[0]
-            var avgChWidth = width / this.textContents().length
-            var approxPosition = Math.round((clientX - left) / avgChWidth)
-            if (approxPosition <= 0) {
-                cursor.insAtLeftEnd(this)
-            } else if (approxPosition >= textPc.textStr.length) {
-                cursor.insAtRightEnd(this)
-            } else {
-                cursor.insLeftOf(textPc.splitRight(approxPosition))
-            }
+            const avgChWidth = width / this.textContents().length
+            const approxPosition = Math.round((clientX - left) / avgChWidth)
+            if (approxPosition <= 0) cursor.insAtLeftEnd(this)
+            else if (approxPosition >= textPc.textStr.length) cursor.insAtRightEnd(this)
+            else cursor.insLeftOf(textPc.splitRight(approxPosition))
         } else {
             cursor.insAtLeftEnd(this)
         }
 
-        // move towards mousedown (clientX)
-        var displ =
-            clientX - cursor.show().getBoundingClientRectWithoutMargin().left; // displacement
-        var dir = displ && displ < 0 ? L : R
-        var prevDispl = dir as number
-        // displ * prevDispl > 0 iff displacement direction === previous direction
+        // then move character by character towards clientX
+        let displ = clientX - cursor.show().getBoundingClientRectWithoutMargin().left
+        const dir = displ && displ < 0 ? L : R
+        let prevDispl: number = dir
+        // displ * prevDispl > 0 iff still moving in the same direction
         while (cursor[dir] && displ * prevDispl > 0) {
-            (cursor[dir] as MQNode).moveTowards(dir, cursor)
+            ;(cursor[dir] as MQNode).moveTowards(dir, cursor)
             prevDispl = displ
             displ = clientX - cursor.getBoundingClientRectWithoutMargin().left
         }
-        if (dir * displ < -dir * prevDispl)
-            (cursor[-dir as Direction] as MQNode).moveTowards(
-                -dir as Direction,
-                cursor
-            )
+        if (dir * displ < -dir * prevDispl) (cursor[opp(dir)] as MQNode).moveTowards(opp(dir), cursor)
 
+        const cursorL = cursor[L] as TextPiece | 0
         if (!cursor.anticursor) {
-            // about to start mouse-selecting, the anticursor is gonna get put here
-            const cursorL = cursor[L]
-            this.anticursorPosition =
-                cursorL && (cursorL as TextPiece).textStr.length
-            // ^ get it? 'cos if there's no cursor[L], it's 0... I'm a terrible person.
+            // about to start mouse-selecting: the anticursor will be put here
+            this.anticursorPosition = cursorL ? cursorL.textStr.length : 0
         } else if (cursor.anticursor.parent === this) {
-            // mouse-selecting within this TextBlock, re-insert the anticursor
-            const cursorL = cursor[L]
-            var cursorPosition = cursorL && (cursorL as TextPiece).textStr.length
-            if (this.anticursorPosition === cursorPosition) {
+            // mouse-selecting within this block: re-insert the anticursor
+            const cursorPosition = cursorL ? cursorL.textStr.length : 0
+            const anticursorPosition = this.anticursorPosition ?? 0
+            if (anticursorPosition === cursorPosition) {
                 cursor.anticursor = Anticursor.fromCursor(cursor)
             } else {
-                if (this.anticursorPosition! < cursorPosition!) {
-                    var newTextPc = (cursorL as any as TextPiece).splitRight(
-                        this.anticursorPosition!
-                    )
+                let newTextPc: TextPiece
+                if (anticursorPosition < cursorPosition) {
+                    newTextPc = (cursorL as TextPiece).splitRight(anticursorPosition)
                     cursor[L] = newTextPc
                 } else {
-                    const cursorR = cursor[R] as any as TextPiece
-                    var newTextPc = cursorR.splitRight(
-                        this.anticursorPosition! - cursorPosition!
-                    )
+                    newTextPc = (cursor[R] as TextPiece).splitRight(anticursorPosition - cursorPosition)
                 }
                 cursor.anticursor = new Anticursor(this, newTextPc[L], newTextPc)
             }
         }
     }
 
-    blur(cursor: Cursor) {
-        MathBlock.prototype.blur.call(this, cursor)
+    focus(): void {
+        this.domFrag().addClass('mq-hasCursor')
+        this.domFrag().removeClass('mq-empty')
+    }
+
+    blur(cursor?: Cursor): void {
+        this.domFrag().removeClass('mq-hasCursor')
+        if (this.isEmpty()) {
+            this.domFrag().addClass('mq-empty')
+            if (cursor && this.isQuietEmptyDelimiter(cursor.options.quietEmptyDelimiters)) {
+                this.domFrag().addClass('mq-quiet-delimiter')
+            }
+        }
         if (!cursor) return
         if (this.textContents() === '') {
+            // empty text blocks disappear when the cursor leaves
             this.remove()
             if (cursor[L] === this) cursor[L] = this[L]
             else if (cursor[R] === this) cursor[R] = this[R]
-        } else TextBlockFuseChildren(this)
-    }
-
-    focus() {
-        MathBlock.prototype.focus.call(this)
+        } else fuseChildren(this)
     }
 }
 
-function TextBlockFuseChildren(self: TextBlock) {
-    self.domFrag().oneElement().normalize()
-
-    const children = self.domFrag().children()
-    if (children.isEmpty()) return
-    const textPcDom = children.oneText()
-    // nodeType === 3 has meant a Text node since ancient times:
-    //   http://reference.sitepoint.com/javascript/Node/nodeType
-
-    var textPc = new TextPiece(textPcDom.data)
-    textPc.setDOM(textPcDom)
-
-    self.children().disown()
-    textPc.adopt(self, 0, 0)
-    return textPc
+/** Merge all TextPieces of `block` (and their DOM text nodes) into one. */
+function fuseChildren(block: TextBlock): TextPiece | undefined {
+    block.domFrag().oneElement().normalize()
+    const children = block.domFrag().children()
+    if (children.isEmpty()) return undefined
+    const textNode = children.oneText()
+    const piece = new TextPiece(textNode.data)
+    piece.setDOM(textNode)
+    block.children().disown()
+    piece.adopt(block, 0, 0)
+    return piece
 }
 
 /**
- * Piece of plain text, with a TextBlock as a parent and no children.
- * Wraps a single DOMTextNode.
- * For convenience, has a .textStr property that's just a JavaScript string
- * mirroring the text contents of the DOMTextNode.
- * Text contents must always be nonempty.
+ * Piece of plain text inside a TextBlock; wraps a single DOM Text node,
+ * mirrored in `textStr`. Never empty.
  */
-class TextPiece extends MQNode {
+export class TextPiece extends MQNode {
     textStr: string
 
     constructor(text: string) {
         super()
         this.textStr = text
     }
-    html() {
+
+    html(): Node {
         const out = h.text(this.textStr)
         this.setDOM(out)
         return out
     }
-    appendText(text: string) {
+
+    appendText(text: string): void {
         this.textStr += text
         this.domFrag().oneText().appendData(text)
     }
-    prependText(text: string) {
+
+    prependText(text: string): void {
         this.textStr = text + this.textStr
         this.domFrag().oneText().insertData(0, text)
     }
-    insTextAtDirEnd(text: string, dir: Direction) {
+
+    insTextAtDirEnd(text: string, dir: Direction): void {
         if (dir === R) this.appendText(text)
         else this.prependText(text)
     }
-    splitRight(i: number) {
-        var newPc = new TextPiece(this.textStr.slice(i)).adopt(
-            this.parent,
-            this,
-            this[R]
-        )
+
+    /** Split at offset `i`; returns the new right piece. */
+    splitRight(i: number): TextPiece {
+        const newPc = new TextPiece(this.textStr.slice(i)).adopt(this.parent, this, this[R])
         newPc.setDOM(this.domFrag().oneText().splitText(i))
         this.textStr = this.textStr.slice(0, i)
         return newPc
     }
 
-    endChar(dir: Direction, text: string) {
-        return text.charAt(dir === L ? 0 : -1 + text.length)
+    private endChar(dir: Direction): string {
+        return this.textStr.charAt(dir === L ? 0 : this.textStr.length - 1)
     }
 
-    moveTowards(dir: Direction, cursor: Cursor) {
-        var ch = this.endChar(-dir as Direction, this.textStr)
-
-        var from = this[-dir as Direction]
+    /** Moving the cursor over a character moves that character into the neighbouring piece. */
+    moveTowards(dir: Direction, cursor: Cursor): void {
+        const ch = this.endChar(opp(dir))
+        const from = this[opp(dir)]
         if (from instanceof TextPiece) from.insTextAtDirEnd(ch, dir)
-        else new TextPiece(ch).createDir(-dir as Direction, cursor)
-        return this.deleteTowards(dir, cursor)
+        else new TextPiece(ch).createDir(opp(dir), cursor)
+        this.deleteTowards(dir, cursor)
     }
-    latex() {
+
+    latex(): string {
         return this.textStr
     }
 
-    deleteTowards(dir: Direction, cursor: Cursor) {
+    deleteTowards(dir: Direction, cursor: Cursor): void {
         if (this.textStr.length > 1) {
-            var deletedChar
+            const text = this.domFrag().oneText()
             if (dir === R) {
-                this.domFrag().oneText().deleteData(0, 1)
-                deletedChar = this.textStr[0]
+                text.deleteData(0, 1)
                 this.textStr = this.textStr.slice(1)
             } else {
-                // note that the order of these 2 lines is annoyingly important
-                // (the second line mutates this.textStr.length)
-                this.domFrag()
-                    .oneText()
-                    .deleteData(-1 + this.textStr.length, 1)
-                deletedChar = this.textStr[this.textStr.length - 1]
+                // order matters: deleteData uses the old length
+                text.deleteData(this.textStr.length - 1, 1)
                 this.textStr = this.textStr.slice(0, -1)
             }
         } else {
@@ -362,151 +322,95 @@ class TextPiece extends MQNode {
         }
     }
 
-    selectTowards(dir: Direction, cursor: Cursor) {
-        var anticursor = cursor.anticursor
+    selectTowards(dir: Direction, cursor: Cursor): void {
+        const anticursor = cursor.anticursor
         if (!anticursor) return
 
-        var ch = this.endChar(-dir as Direction, this.textStr)
-
+        const ch = this.endChar(opp(dir))
         if (anticursor[dir] === this) {
-            var newPc = new TextPiece(ch).createDir(dir, cursor)
+            const newPc = new TextPiece(ch).createDir(dir, cursor)
             anticursor[dir] = newPc
             cursor.insDirOf(dir, newPc)
         } else {
-            var from = this[-dir as Direction]
-            if (from instanceof TextPiece) from.insTextAtDirEnd(ch, dir)
-            else {
-                var newPc = new TextPiece(ch).createDir(-dir as Direction, cursor)
-                var selection = cursor.selection
-                if (selection) {
-                    newPc.domFrag().insDirOf(-dir as Direction, selection.domFrag())
-                }
+            const from = this[opp(dir)]
+            if (from instanceof TextPiece) {
+                from.insTextAtDirEnd(ch, dir)
+            } else {
+                const newPc = new TextPiece(ch).createDir(opp(dir), cursor)
+                const selection = cursor.selection
+                if (selection) newPc.domFrag().insDirOf(opp(dir), selection.domFrag())
             }
-
-            if (this.textStr.length === 1 && anticursor[-dir as Direction] === this) {
-                anticursor[-dir as Direction] = this[-dir as Direction]; // `this` will be removed in deleteTowards
+            if (this.textStr.length === 1 && anticursor[opp(dir)] === this) {
+                anticursor[opp(dir)] = this[opp(dir)] // `this` will be removed by deleteTowards
             }
         }
-
-        return this.deleteTowards(dir, cursor)
+        this.deleteTowards(dir, cursor)
     }
 }
 
-LatexCmds.text =
-    LatexCmds.textnormal =
-    LatexCmds.textrm =
-    LatexCmds.textup =
-    LatexCmds.textmd =
-    TextBlock
+latexCommands.define(['text', 'textnormal', 'textrm', 'textup', 'textmd'], TextBlock)
 
-function makeTextBlock(
-    latex: string,
-    tagName: HTMLTagName,
-    attrs: { style?: string; class: string }
-) {
-    return class extends TextBlock {
-        ctrlSeq = latex
-        html() {
-            const out = h(tagName, attrs, [h.text(this.textContents())])
-            this.setDOM(out)
-            NodeBase.linkElementByCmdNode(out, this)
-            return out
+function defineTextStyle(names: string[], ctrlSeq: string, tag: HTMLTagName, attrs: { class: string; style?: string }): void {
+    latexCommands.define(
+        names,
+        class extends TextBlock {
+            ctrlSeq = ctrlSeq
+            protected element() {
+                return { tag, attrs }
+            }
         }
-    }
-}
-
-LatexCmds.em =
-    LatexCmds.italic =
-    LatexCmds.italics =
-    LatexCmds.emph =
-    LatexCmds.textit =
-    LatexCmds.textsl =
-    makeTextBlock('\\textit', 'i', { class: 'mq-text-mode' })
-
-LatexCmds.strong =
-    LatexCmds.bold =
-    LatexCmds.textbf =
-    makeTextBlock('\\textbf', 'b', { class: 'mq-text-mode' })
-
-LatexCmds.sf = LatexCmds.textsf = makeTextBlock(
-    '\\textsf',
-    'span',
-    { class: 'mq-sans-serif mq-text-mode' }
-)
-
-LatexCmds.tt = LatexCmds.texttt = makeTextBlock(
-    '\\texttt',
-    'span',
-    { class: 'mq-monospace mq-text-mode' }
-)
-
-LatexCmds.textsc = makeTextBlock('\\textsc', 'span', {
-    style: 'font-variant:small-caps',
-    class: 'mq-text-mode',
-})
-
-LatexCmds.uppercase = makeTextBlock('\\uppercase', 'span', {
-    style: 'text-transform:uppercase',
-    class: 'mq-text-mode',
-})
-
-LatexCmds.lowercase = makeTextBlock('\\lowercase', 'span', {
-    style: 'text-transform:lowercase',
-    class: 'mq-text-mode',
-})
-
-class RootMathCommand extends MathCommand {
-    cursor: Cursor
-    constructor(cursor: Cursor) {
-        super('$')
-        this.cursor = cursor
-    }
-    domView = new DOMView(1, (blocks) =>
-        h.block('span', { class: 'mq-math-mode' }, blocks[0])
     )
-    createBlocks() {
-        super.createBlocks()
-        //@ts-ignore
-        const endsL = this.getEnd(L) as RootMathCommand; // TODO - how do we know this is a RootMathCommand?
-        endsL.cursor = this.cursor
-        endsL.write = function (cursor: Cursor, ch: string) {
-            if (ch !== '$') MathBlock.prototype.write.call(this, cursor, ch)
-            else if (this.isEmpty()) {
-                cursor.insRightOf(this.parent)
-                this.parent.deleteTowards(undefined!, cursor)
-                new VanillaSymbol('\\$', h.text('$')).createLeftOf(cursor.show())
-            } else if (!cursor[R]) cursor.insRightOf(this.parent)
-            else if (!cursor[L]) cursor.insLeftOf(this.parent)
-            else MathBlock.prototype.write.call(this, cursor, ch)
-        }
+}
+
+defineTextStyle(['em', 'italic', 'italics', 'emph', 'textit', 'textsl'], '\\textit', 'i', { class: 'mq-text-mode' })
+defineTextStyle(['strong', 'bold', 'textbf'], '\\textbf', 'b', { class: 'mq-text-mode' })
+defineTextStyle(['sf', 'textsf'], '\\textsf', 'span', { class: 'mq-sans-serif mq-text-mode' })
+defineTextStyle(['tt', 'texttt'], '\\texttt', 'span', { class: 'mq-monospace mq-text-mode' })
+defineTextStyle(['textsc'], '\\textsc', 'span', { style: 'font-variant:small-caps', class: 'mq-text-mode' })
+defineTextStyle(['uppercase'], '\\uppercase', 'span', { style: 'text-transform:uppercase', class: 'mq-text-mode' })
+defineTextStyle(['lowercase'], '\\lowercase', 'span', { style: 'text-transform:lowercase', class: 'mq-text-mode' })
+
+/** `$...$`: a math island inside a TextField. */
+export class RootMathCommand extends MathCommand {
+    textTemplate = ['$', '$']
+    domView = new DOMView(1, (blocks) => h.block('span', { class: 'mq-math-mode' }, blocks[0]))
+
+    constructor() {
+        super('$')
     }
-    latex() {
+
+    writeInBlock(block: MathBlock, cursor: Cursor, ch: string): void {
+        if (ch !== '$') block.writeDefault(cursor, ch)
+        else if (block.isEmpty()) {
+            // `$$` gives a literal dollar sign
+            cursor.insRightOf(this)
+            this.deleteTowards(L, cursor)
+            new VanillaSymbol('\\$', h.text('$')).createLeftOf(cursor.show())
+        } else if (!cursor[R]) cursor.insRightOf(this)
+        else if (!cursor[L]) cursor.insLeftOf(this)
+        else block.writeDefault(cursor, ch)
+    }
+
+    latex(): string {
         return '$' + this.getEnd(L).latex() + '$'
     }
 }
 
-class RootTextBlock extends RootMathBlock {
-    keystroke(key: string, e: KeyboardEvent, ctrlr: Controller) {
-        if (key === 'Spacebar' || key === 'Shift-Spacebar') return
-        return super.keystroke(key, e, ctrlr)
+/** Root block of a TextField. */
+export class RootTextBlock extends RootMathBlock {
+    handleKeystroke(key: string, e: KeyboardEvent | undefined, ctrlr: Controller): boolean {
+        // a space is typed as text, never treated as a key command
+        if (key === 'Spacebar' || key === 'Shift-Spacebar') return true
+        return super.handleKeystroke(key, e, ctrlr)
     }
-    write(cursor: Cursor, ch: string) {
+
+    write(cursor: Cursor, ch: string): void {
         cursor.show().deleteSelection()
-        if (ch === '$') new RootMathCommand(cursor).createLeftOf(cursor)
-        else {
-            var html
-            if (ch === '<') html = h.entityText('&lt;')
-            else if (ch === '>') html = h.entityText('&gt;')
+        if (ch === '$') {
+            new RootMathCommand().createLeftOf(cursor)
+        } else {
+            const html = ch === '<' ? h.entityText('&lt;') : ch === '>' ? h.entityText('&gt;') : undefined
             new VanillaSymbol(ch, html).createLeftOf(cursor)
         }
     }
-}
-
-export {
-    TextBlock,
-    TextPiece,
-    RootMathCommand,
-    RootTextBlock,
-    TextBlockFuseChildren,
-    makeTextBlock
 }

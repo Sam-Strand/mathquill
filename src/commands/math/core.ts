@@ -1,508 +1,536 @@
-import type { Ends, Direction } from '../../types'
-import type { NodeRef, JoinMethod } from '../../shared_types'
-import type { Controller } from '../../services/textarea'
+/*********************************************
+ * Math tree node classes: blocks, commands and symbols.
+ *
+ *   MathElement ─┬─ MathBlock        a list of math nodes (child of a command, or a root)
+ *                └─ MathCommand      a command with N child blocks (\frac has 2)
+ *                     └─ MQSymbol    a command without blocks (x, +, \alpha)
+ *********************************************/
+import { L, R, opp, type Direction, type Ends } from '../../core/direction'
+import { h } from '../../core/dom'
+import { domFrag } from '../../core/domFragment'
+import { getBoundingClientRect } from '../../core/geometry'
+import { Parser } from '../../core/parser'
+import { MQNode } from '../../tree/node'
+import { Fragment, type NodeRef } from '../../tree/fragment'
+import { linkCommandElement } from '../../tree/domLink'
+import type { Cursor } from '../../tree/cursor'
 import type { Options } from '../../options'
-import type { Cursor, Anticursor } from '../../cursor'
+import type { Controller } from '../../controller/Controller'
+import { basicNodes, charCommands, latexCommands } from '../registry'
+import { latexMathParser } from './latexParser'
 
-import { NodeBase, MQNode, Fragment } from '../../tree'
-import { L, R } from '../../types'
-import { h } from '../../dom'
-import { getBoundingClientRect } from '../../browser'
-import { Parser } from '../../services/parser.util'
-
-/**
- * Math tree node base class.
- * Some math-tree-specific extensions to MQNode.
- * Both MathBlock's and MathCommand's descend from it.
- */
+/** Math-specific behaviour shared by blocks and commands. */
 export class MathElement extends MQNode {
-    finalizeInsert(options: Options, cursor: Cursor) {
-        var self = this
-        self.postOrder(function (node) {
-            node.finalizeTree(options)
-        })
-        self.postOrder(function (node) {
-            node.contactWeld(cursor)
-        })
-
-        // note: this order is important.
-        // empty elements need the empty box provided by blur to
-        // be present in order for their dimensions to be measured
-        // correctly by 'reflow' handlers.
-        self.postOrder(function (node) {
-            node.blur(cursor)
-        })
-
-        self.postOrder(function (node) {
-            node.reflow()
-        })
-        var selfR = self[R]
-        var selfL = self[L]
+    finalizeInsert(options: Options, cursor: Cursor): void {
+        this.postOrder((node) => node.finalizeTree(options))
+        this.postOrder((node) => node.contactWeld(cursor))
+        // Order matters: empty blocks need the empty box added by blur() to
+        // be measured correctly by reflow().
+        this.postOrder((node) => node.blur(cursor))
+        this.postOrder((node) => node.reflow())
+        const selfR = this[R]
+        const selfL = this[L]
         if (selfR) selfR.siblingCreated(options, L)
         if (selfL) selfL.siblingCreated(options, R)
-        self.bubble(function (node) {
-            node.reflow()
-            return undefined
-        })
+        this.bubble((node) => node.reflow())
     }
-    // If the maxDepth option is set, make sure
-    // deeply nested content is truncated. Just return
-    // false if the cursor is already too deep.
-    prepareInsertionAt(cursor: Cursor) {
-        var maxDepth = cursor.options.maxDepth
+
+    /**
+     * With the `maxDepth` option, truncate content nested too deeply to be
+     * inserted at the cursor. Returns false if the cursor itself is too deep.
+     */
+    prepareInsertionAt(cursor: Cursor): boolean {
+        const maxDepth = cursor.options.maxDepth
         if (maxDepth !== undefined) {
-            var cursorDepth = cursor.depth()
-            if (cursorDepth > maxDepth) {
-                return false
-            }
+            const cursorDepth = cursor.depth()
+            if (cursorDepth > maxDepth) return false
             this.removeNodesDeeperThan(maxDepth - cursorDepth)
         }
         return true
     }
-    // Remove nodes that are more than `cutoff`
-    // blocks deep from this node.
-    removeNodesDeeperThan(cutoff: number) {
-        var depth = 0
-        var queue: [[MQNode, number]] = [[this, depth]]
-        var current: [MQNode, number] | undefined
 
-        // Do a breadth-first search of this node's descendants
-        // down to cutoff, removing anything deeper.
-        while ((current = queue.shift())) {
-            var c = current
-            c[0].children().each(function (child) {
-                var i = child.isMathBlock() ? 1 : 0
-                depth = c[1] + i
-
-                if (depth <= cutoff) {
-                    queue.push([child, depth])
-                } else {
-                    (i ? child.children() : child).remove()
-                }
-                return undefined
+    /** Remove nodes that are more than `cutoff` blocks deep (breadth-first). */
+    removeNodesDeeperThan(cutoff: number): void {
+        const queue: [MQNode, number][] = [[this, 0]]
+        for (let current = queue.shift(); current; current = queue.shift()) {
+            const [node, nodeDepth] = current
+            node.children().each((child) => {
+                const isBlock = child.isMathBlock()
+                const depth = nodeDepth + (isBlock ? 1 : 0)
+                if (depth <= cutoff) queue.push([child, depth])
+                else (isBlock ? child.children() : child).remove()
             })
         }
     }
 }
 
+/** How a command renders: number of child blocks and a template producing its DOM. */
 export class DOMView {
     constructor(
-        public readonly childCount: number,
-        public readonly render: (blocks: MathBlock[]) => Element
-    ) { }
+        readonly childCount: number,
+        readonly render: (blocks: MathBlock[]) => Element
+    ) {}
 }
 
-/**
- * Commands and operators, like subscripts, exponents, or fractions.
- * Descendant commands are organized into blocks.
- */
+/** Commands and operators, like subscripts, exponents, or fractions. Children are organized into blocks. */
 export class MathCommand extends MathElement {
-    replacedFragment: Fragment | undefined
-    domView: DOMView
     declare ends: Ends<MQNode>
+    declare blocks: MathBlock[] | undefined
+    replacedFragment: Fragment | undefined
+    domView: DOMView | undefined
+    /**
+     * Text export: `textTemplate[0] + block0.text() + textTemplate[1] + block1.text() + ...`.
+     * Defaults to the plain concatenation of the blocks.
+     */
+    textTemplate: readonly string[] = ['']
 
-    constructor(ctrlSeq?: string, domView?: DOMView) {
+    constructor(ctrlSeq?: string, domView?: DOMView, textTemplate?: readonly string[]) {
         super()
-        this.setCtrlSeqHtmlAndText(ctrlSeq, domView)
+        if (ctrlSeq !== undefined) this.ctrlSeq = ctrlSeq
+        if (domView) this.domView = domView
+        if (textTemplate) this.textTemplate = textTemplate
     }
 
-    setEnds(ends: Ends<MQNode>) {
-        this.ends = ends
+    setEnds(ends: Ends<NodeRef>): void {
+        this.ends = ends as Ends<MQNode>
     }
 
     getEnd(dir: Direction): MQNode {
         return this.ends[dir]
     }
 
-    setCtrlSeqHtmlAndText(
-        ctrlSeq?: string,
-        domView?: DOMView
-    ) {
-        if (!this.ctrlSeq) this.ctrlSeq = ctrlSeq
-        if (domView) this.domView = domView
+    blockAt(dir: Direction): MathBlock {
+        return this.ends[dir] as MathBlock
     }
 
-    // obvious methods
-    replaces(replacedFragment: Fragment) {
-        replacedFragment.disown()
-        this.replacedFragment = replacedFragment
+    /** Wrap `fragment` (usually the selection) in this command when it is created. */
+    replaces(fragment: Fragment): void {
+        fragment.disown()
+        this.replacedFragment = fragment
     }
 
-    isEmpty() {
-        return this.foldChildren(true, function (isEmpty, child) {
-            return isEmpty && child.isEmpty()
+    isEmpty(): boolean {
+        return this.foldChildren(true, (isEmpty, child) => isEmpty && child.isEmpty())
+    }
+
+    /** By default a command is followed by one LaTeX block per child block. */
+    parser(): Parser<MQNode | Fragment> {
+        return latexMathParser.block.times(this.numBlocks()).map((blocks) => {
+            this.blocks = blocks
+            for (const block of blocks) block.adopt(this, this.getEnd(R), 0)
+            return this
         })
     }
 
-    parser(): Parser<MQNode | Fragment> {
-        throw new Error('parser() not implemented in core; use MathCommand.prototype.parser override');
-    }
-
-    // createLeftOf(cursor) and the methods it calls
-    createLeftOf(cursor: Cursor) {
-        var cmd = this
-        var replacedFragment = cmd.replacedFragment
-
-        cmd.createBlocks()
+    createLeftOf(cursor: Cursor): void {
+        const replacedFragment = this.replacedFragment
+        this.createBlocks()
         super.createLeftOf(cursor)
         if (replacedFragment) {
-            const cmdEndsL = cmd.getEnd(L)
-            replacedFragment.adopt(cmdEndsL, 0, 0)
-            replacedFragment.domFrag().appendTo(cmdEndsL.domFrag().oneElement())
-            cmd.placeCursor(cursor)
-            cmd.prepareInsertionAt(cursor)
+            const firstBlock = this.getEnd(L)
+            replacedFragment.adopt(firstBlock, 0, 0)
+            replacedFragment.domFrag().appendTo(firstBlock.domFrag().oneElement())
+            this.placeCursor(cursor)
+            this.prepareInsertionAt(cursor)
         }
-        cmd.finalizeInsert(cursor.options, cursor)
-        cmd.placeCursor(cursor)
+        this.finalizeInsert(cursor.options, cursor)
+        this.placeCursor(cursor)
     }
 
-    createBlocks() {
-        var cmd = this,
-            numBlocks = cmd.numBlocks(),
-            blocks = (cmd.blocks = Array(numBlocks))
-
-        for (var i = 0; i < numBlocks; i += 1) {
-            var newBlock = (blocks[i] = new MathBlock())
-            newBlock.adopt(cmd, cmd.getEnd(R), 0)
+    /** Create the (empty) child blocks of a command being typed. */
+    createBlocks(): void {
+        const blocks: MathBlock[] = (this.blocks = [])
+        for (let i = 0; i < this.numBlocks(); i += 1) {
+            const block = this.newBlock(i)
+            blocks.push(block)
+            block.adopt(this, this.getEnd(R), 0)
         }
     }
 
-    placeCursor(cursor: Cursor) {
-        //insert the cursor at the right end of the first empty child, searching
-        //left-to-right, or if none empty, the right end child
-        cursor.insAtRightEnd(
-            this.foldChildren(this.getEnd(L), function (leftward, child) {
-                return leftward.isEmpty() ? leftward : child
-            })
-        )
+    /** Block class used for typed commands; overridden by commands with special blocks. */
+    protected newBlock(_index: number): MathBlock {
+        return new MathBlock()
     }
 
-    // editability methods: called by the cursor for editing, cursor movements,
-    // and selection of the MathQuill tree, these all take in a direction and
-    // the cursor
-    moveTowards(dir: Direction, cursor: Cursor, updown?: 'up' | 'down') {
-        var updownInto: NodeRef | undefined
-        if (updown === 'up') {
-            updownInto = this.upInto
-        } else if (updown === 'down') {
-            updownInto = this.downInto
-        }
-
-        const el = updownInto || this.getEnd(-dir as Direction)
-        cursor.insAtDirEnd(-dir as Direction, el)
+    /** Put the cursor at the right end of the first empty block, or the last block. */
+    placeCursor(cursor: Cursor): void {
+        cursor.insAtRightEnd(this.foldChildren(this.getEnd(L), (leftward, child) => (leftward.isEmpty() ? leftward : child)))
     }
 
-    deleteTowards(dir: Direction, cursor: Cursor) {
+    // ---- hooks for child blocks -------------------------------------------
+
+    /** A character typed inside one of this command's blocks. */
+    writeInBlock(block: MathBlock, cursor: Cursor, ch: string): void {
+        block.writeDefault(cursor, ch)
+    }
+
+    /** Backspace/Del pressed at the edge of one of this command's blocks. */
+    deleteOutOfBlock(_block: MathBlock, _dir: Direction, cursor: Cursor): void {
+        cursor.unwrapGramp()
+    }
+
+    // ---- editing ----------------------------------------------------------
+
+    moveTowards(dir: Direction, cursor: Cursor, updown?: 'up' | 'down'): void {
+        const into = (updown === 'up' && this.upInto) || (updown === 'down' && this.downInto) || this.getEnd(opp(dir))
+        cursor.insAtDirEnd(opp(dir), into)
+    }
+
+    deleteTowards(dir: Direction, cursor: Cursor): void {
         if (this.isEmpty()) cursor[dir] = this.remove()[dir]
         else this.moveTowards(dir, cursor)
     }
 
-    selectTowards(dir: Direction, cursor: Cursor) {
-        cursor[-dir as Direction] = this
+    selectTowards(dir: Direction, cursor: Cursor): void {
+        cursor[opp(dir)] = this
         cursor[dir] = this[dir]
     }
 
-    unselectInto(dir: Direction, cursor: Cursor) {
-        const antiCursor = cursor.anticursor as Anticursor
-        const ancestor = antiCursor.ancestors[this.id] as MQNode
-        cursor.insAtDirEnd(-dir as Direction, ancestor)
+    unselectInto(dir: Direction, cursor: Cursor): void {
+        const ancestor = cursor.anticursor?.ancestors[this.id] as MQNode
+        cursor.insAtDirEnd(opp(dir), ancestor)
     }
 
-    seek(clientX: number, cursor: Cursor) {
-        function getBounds(node: MQNode) {
+    seek(clientX: number, cursor: Cursor): void {
+        const bounds = (node: MQNode) => {
             const el = node.domFrag().oneElement()
-            const l = getBoundingClientRect(el).left
-            var r: number = l + el.offsetWidth
-            return {
-                [L]: l,
-                [R]: r,
-            }
+            const left = getBoundingClientRect(el).left
+            return { [L]: left, [R]: left + el.offsetWidth }
         }
 
-        var cmd = this
-        var cmdBounds = getBounds(cmd)
+        const cmdBounds = bounds(this)
+        if (clientX < cmdBounds[L]) {
+            cursor.insLeftOf(this)
+            return
+        }
+        if (clientX > cmdBounds[R]) {
+            cursor.insRightOf(this)
+            return
+        }
 
-        if (clientX < cmdBounds[L]) return cursor.insLeftOf(cmd)
-        if (clientX > cmdBounds[R]) return cursor.insRightOf(cmd)
-
-        var leftLeftBound = cmdBounds[L]
-        cmd.eachChild(function (block) {
-            var blockBounds = getBounds(block)
+        let leftLeftBound = cmdBounds[L]
+        this.eachChild((block) => {
+            const blockBounds = bounds(block)
             if (clientX < blockBounds[L]) {
                 // closer to this block's left bound, or the bound left of that?
                 if (clientX - leftLeftBound < blockBounds[L] - clientX) {
-                    if (block[L]) cursor.insAtRightEnd(block[L] as MQNode)
-                    else cursor.insLeftOf(cmd)
+                    if (block[L]) cursor.insAtRightEnd(block[L])
+                    else cursor.insLeftOf(this)
                 } else cursor.insAtLeftEnd(block)
                 return false
-            } else if (clientX > blockBounds[R]) {
-                if (block[R]) leftLeftBound = blockBounds[R]
-                // continue to next block
-                else {
-                    // last (rightmost) block
-                    // closer to this block's right bound, or the cmd's right bound?
-                    if (cmdBounds[R] - clientX < clientX - blockBounds[R]) {
-                        cursor.insRightOf(cmd)
-                    } else cursor.insAtRightEnd(block)
-                }
-                return undefined
-            } else {
-                block.seek(clientX, cursor)
-                return false
             }
+            if (clientX > blockBounds[R]) {
+                if (block[R]) {
+                    leftLeftBound = blockBounds[R] // continue to the next block
+                } else if (cmdBounds[R] - clientX < clientX - blockBounds[R]) {
+                    // last block: closer to its right bound, or the command's?
+                    cursor.insRightOf(this)
+                } else cursor.insAtRightEnd(block)
+                return
+            }
+            block.seek(clientX, cursor)
+            return false
         })
-
-        return undefined
     }
 
-    numBlocks() {
-        return this.domView.childCount
+    numBlocks(): number {
+        return this.domView ? this.domView.childCount : 0
     }
 
-    /**
-     * Render the entire math subtree rooted at this command to a DOM node. Assumes `this.domView` is defined.
-     *
-     * See dom.test.js for example templates and intended outputs.
-     */
-    html(): Element | DocumentFragment {
-        const blocks = this.blocks
-        const template = this.domView
-        const dom = template.render(blocks || [])
+    /** Render the subtree rooted at this command. */
+    html(): Node {
+        if (!this.domView) throw new Error('no DOM view for ' + (this.ctrlSeq ?? this.constructor.name))
+        const dom = this.domView.render(this.blocks || [])
         this.setDOM(dom)
-        NodeBase.linkElementByCmdNode(dom, this)
+        linkCommandElement(dom, this)
         return dom
     }
 
-    // methods to export a string representation of the math tree
-    latex() {
-        return this.foldChildren(this.ctrlSeq || '', function (latex, child) {
-            return latex + '{' + (child.latex() || ' ') + '}'
+    latex(): string {
+        return this.foldChildren(this.ctrlSeq || '', (latex, child) => latex + '{' + (child.latex() || ' ') + '}')
+    }
+
+    text(): string {
+        const template = this.textTemplate
+        let i = 0
+        return this.foldChildren(template[0], (text, child) => {
+            i += 1
+            const childText = child.text()
+            // avoid doubled parentheses, e.g. `(a+b)/(c)` rather than `((a+b))/(c)`
+            if (text && template[i] === '(' && childText[0] === '(' && childText.slice(-1) === ')') {
+                return text + childText.slice(1, -1) + template[i]
+            }
+            return text + childText + (template[i] || '')
         })
     }
 }
 
-/**
- * Lightweight command without blocks or children.
- */
+/** A command without blocks: letters, digits, operators, constants. */
 export class MQSymbol extends MathCommand {
-    constructor(
-        ctrlSeq?: string,
-        html?: HTMLElement
-    ) {
-        super()
-        this.setCtrlSeqHtmlText(
-            ctrlSeq,
-            html
-                ? new DOMView(0, () => html.cloneNode(true) as HTMLElement)
-                : undefined
-        )
-    }
+    private readonly textOverride: string | undefined
 
-    setCtrlSeqHtmlText(ctrlSeq?: string, html?: DOMView) {
-        super.setCtrlSeqHtmlAndText(ctrlSeq, html)
+    constructor(ctrlSeq?: string, html?: Element, text?: string) {
+        super(ctrlSeq, html ? new DOMView(0, () => html.cloneNode(true) as Element) : undefined)
+        this.textOverride = text
     }
 
     parser(): Parser<MQNode | Fragment> {
         return Parser.succeed(this)
     }
 
-    numBlocks() {
-        return 0 as const
+    numBlocks(): number {
+        return 0
     }
 
-    replaces(replacedFragment: Fragment) {
-        replacedFragment.remove()
+    replaces(fragment: Fragment): void {
+        fragment.remove()
     }
-    createBlocks() { }
 
-    moveTowards(dir: Direction, cursor: Cursor) {
+    createBlocks(): void {}
+
+    moveTowards(dir: Direction, cursor: Cursor): void {
         cursor.domFrag().insDirOf(dir, this.domFrag())
-        cursor[-dir as Direction] = this
+        cursor[opp(dir)] = this
         cursor[dir] = this[dir]
     }
-    deleteTowards(dir: Direction, cursor: Cursor) {
+
+    deleteTowards(dir: Direction, cursor: Cursor): void {
         cursor[dir] = this.remove()[dir]
     }
-    seek(clientX: number, cursor: Cursor) {
+
+    seek(clientX: number, cursor: Cursor): void {
         // insert at whichever side the click was closer to
         const el = this.domFrag().oneElement()
         const left = getBoundingClientRect(el).left
         if (clientX - left < el.offsetWidth / 2) cursor.insLeftOf(this)
         else cursor.insRightOf(this)
-
-        return cursor
     }
 
-    latex() {
+    latex(): string {
         return this.ctrlSeq || ''
     }
-    placeCursor() { }
-    isEmpty() {
+
+    text(): string {
+        if (this.textOverride !== undefined) return this.textOverride
+        return (this.ctrlSeq || '').replace(/^\\/, '').trim()
+    }
+
+    placeCursor(): void {}
+
+    isEmpty(): boolean {
         return true
     }
 }
 
+/** Commands that only exist in LaTeX input (`\left`, `\mathbb`, ...): typing them inserts nothing. */
+export class ParseOnlyCommand extends MathCommand {
+    createLeftOf(): void {}
+    replaces(fragment: Fragment): void {
+        fragment.remove()
+    }
+    numBlocks(): number {
+        return 1
+    }
+}
+
 export class VanillaSymbol extends MQSymbol {
-    constructor(ch: string, html?: ChildNode) {
-        super(ch, h('span', {}, [html || h.text(ch)]), undefined)
+    constructor(ch: string, html?: Node, text?: string) {
+        super(ch, h('span', {}, [html || h.text(ch)]), text)
     }
 }
 
 export class BinaryOperator extends MQSymbol {
-    constructor(
-        ctrlSeq?: string,
-        html?: ChildNode,
-        treatLikeSymbol?: boolean
-    ) {
-        if (treatLikeSymbol) {
-            super(
-                ctrlSeq,
-                h('span', {}, [html || h.text(ctrlSeq || '')]),
-                undefined
-            )
-        } else {
-            super(
-                ctrlSeq,
-                h('span', { class: 'mq-binary-operator' }, html ? [html] : [])
-            )
-        }
+    constructor(ctrlSeq?: string, html?: Node, treatLikeSymbol?: boolean, text?: string) {
+        super(
+            ctrlSeq,
+            treatLikeSymbol
+                ? h('span', {}, [html || h.text(ctrlSeq || '')])
+                : h('span', { class: 'mq-binary-operator' }, html ? [html] : []),
+            text
+        )
     }
 }
 
-export function bindVanillaSymbol(
-    ch: string,
-    htmlEntity?: string
-) {
-    return () =>
-        new VanillaSymbol(
-            ch,
-            htmlEntity ? h.entityText(htmlEntity) : undefined
-        )
+export function bindVanillaSymbol(ch: string, htmlEntity?: string, text?: string) {
+    return () => new VanillaSymbol(ch, htmlEntity ? h.entityText(htmlEntity) : undefined, text)
 }
 
-export function bindBinaryOperator(
-    ctrlSeq?: string,
-    htmlEntity?: string
-) {
-    return () =>
-        new BinaryOperator(
-            ctrlSeq,
-            htmlEntity ? h.entityText(htmlEntity) : undefined
-        )
+export function bindBinaryOperator(ctrlSeq: string, htmlEntity?: string, text?: string) {
+    return () => new BinaryOperator(ctrlSeq, htmlEntity ? h.entityText(htmlEntity) : undefined, false, text)
 }
 
 /**
- * Children and parent of MathCommand's. Basically partitions all the
- * symbols and operators that descend (in the Math DOM tree) from
- * ancestor operators.
+ * A list of math nodes: a child block of a command, or the root of a field.
+ * Context-specific behaviour (what typing does inside a superscript, what
+ * Backspace does at the edge of a bracket) is delegated to the parent command.
  */
 export class MathBlock extends MathElement {
-    controller?: Controller
+    /** Set on the root block of a field. */
+    controller: Controller | undefined
 
-    isMathBlock(): boolean { return true; }
-
-    join(methodName: JoinMethod) {
-        return this.foldChildren('', function (fold, child) {
-            return fold + child[methodName]()
-        })
+    isMathBlock(): boolean {
+        return true
     }
 
-    html() {
+    private owner(): MathCommand | undefined {
+        return this.parent instanceof MathCommand ? this.parent : undefined
+    }
+
+    join(method: 'latex' | 'text'): string {
+        return this.foldChildren('', (fold, child) => fold + child[method]())
+    }
+
+    html(): Node {
         const fragment = document.createDocumentFragment()
-        this.eachChild((el) => {
-            const childHtml = el.html()
-            fragment.appendChild(childHtml)
-            return undefined
+        this.eachChild((child) => {
+            fragment.appendChild(child.html())
         })
         return fragment
     }
 
-    latex() {
+    latex(): string {
         return this.join('latex')
     }
 
-    text() {
-        var endsL = this.getEnd(L)
-        var endsR = this.getEnd(R)
-        return endsL === endsR && endsL !== 0 ? endsL.text() : this.join('text')
+    text(): string {
+        const endsL = this.getEnd(L)
+        return endsL && endsL === this.getEnd(R) ? endsL.text() : this.join('text')
     }
 
-    keystroke(key: string, e: KeyboardEvent | undefined, ctrlr: Controller) {
-        if (
-            ctrlr.options.spaceBehavesLikeTab &&
-            (key === 'Spacebar' || key === 'Shift-Spacebar')
-        ) {
+    handleKeystroke(key: string, e: KeyboardEvent | undefined, ctrlr: Controller): boolean {
+        if (ctrlr.options.spaceBehavesLikeTab && (key === 'Spacebar' || key === 'Shift-Spacebar')) {
             e?.preventDefault()
-            ctrlr.escapeDir(key === 'Shift-Spacebar' ? L : R, key, e)
-            return
+            ctrlr.editor.escapeDir(key === 'Shift-Spacebar' ? L : R, e)
+            return true
         }
-        return super.keystroke(key, e, ctrlr)
+        return false
     }
 
-    // editability methods: called by the cursor for editing, cursor movements,
-    // and selection of the MathQuill tree, these all take in a direction and
-    // the cursor
-    moveOutOf(dir: Direction, cursor: Cursor, updown?: 'up' | 'down') {
-        var updownInto: NodeRef | undefined
-        if (updown === 'up') {
-            updownInto = this.parent.upInto
-        } else if (updown === 'down') {
-            updownInto = this.parent.downInto
-        }
+    // ---- typing -----------------------------------------------------------
 
-        if (!updownInto && this[dir]) {
-            const otherDir = -dir as Direction
-            cursor.insAtDirEnd(otherDir, this[dir] as MQNode)
-        } else {
-            cursor.insDirOf(dir, this.parent)
-        }
+    chToCmd(ch: string, options: Options): MQNode {
+        if (/^[a-eg-zA-Z]$/.test(ch)) return basicNodes.letter(ch)
+        if (/^\d$/.test(ch)) return basicNodes.digit(ch)
+        if (ch === '/' && options.typingSlashWritesDivisionSymbol) return latexCommands.create('÷')!
+        if (ch === '*' && options.typingAsteriskWritesTimesSymbol) return latexCommands.create('×')!
+        if (ch === '%' && options.typingPercentWritesPercentOf) return latexCommands.create('percentof')!
+        return charCommands.create(ch) ?? latexCommands.create(ch) ?? new VanillaSymbol(ch)
     }
 
-    selectOutOf(dir: Direction, cursor: Cursor) {
+    write(cursor: Cursor, ch: string): void {
+        const owner = this.owner()
+        if (owner) owner.writeInBlock(this, cursor, ch)
+        else this.writeDefault(cursor, ch)
+    }
+
+    /** Insert the command for `ch` at the cursor, wrapping the selection if any. */
+    writeDefault(cursor: Cursor, ch: string): void {
+        const cmd = this.chToCmd(ch, cursor.options)
+        const selection = cursor.selection && cursor.replaceSelection()
+        if (selection) cmd.replaces(selection)
+        if (!cursor.isTooDeep()) cmd.createLeftOf(cursor.show())
+    }
+
+    writeLatex(cursor: Cursor, latex: string): void {
+        const block = latexMathParser.skip(Parser.eof).or(Parser.all.result<false>(false)).parse(latex)
+        if (!block || block.isEmpty() || !block.prepareInsertionAt(cursor)) return
+
+        block.children().adopt(cursor.parent, cursor[L], cursor[R])
+        domFrag(block.html()).insertBefore(cursor.domFrag())
+        cursor[L] = block.getEnd(R)
+        block.finalizeInsert(cursor.options, cursor)
+        const after = (block.getEnd(R) as MQNode)[R]
+        const before = (block.getEnd(L) as MQNode)[L]
+        if (after) after.siblingCreated(cursor.options, L)
+        if (before) before.siblingCreated(cursor.options, R)
+        cursor.parent.bubble((node) => node.reflow())
+    }
+
+    // ---- editing ----------------------------------------------------------
+
+    moveOutOf(dir: Direction, cursor: Cursor, updown?: 'up' | 'down'): void {
+        const updownInto = (updown === 'up' && this.parent.upInto) || (updown === 'down' && this.parent.downInto)
+        const sibling = this[dir]
+        if (!updownInto && sibling) cursor.insAtDirEnd(opp(dir), sibling)
+        else cursor.insDirOf(dir, this.parent)
+    }
+
+    selectOutOf(dir: Direction, cursor: Cursor): void {
         cursor.insDirOf(dir, this.parent)
     }
 
-    deleteOutOf(_dir: Direction, cursor: Cursor) {
-        cursor.unwrapGramp()
+    deleteOutOf(dir: Direction, cursor: Cursor): void {
+        const owner = this.owner()
+        if (owner) owner.deleteOutOfBlock(this, dir, cursor)
+        else cursor.unwrapGramp()
     }
 
-    seek(clientX: number, cursor: Cursor) {
-        var node = this.getEnd(R)
-        if (!node) return cursor.insAtRightEnd(this)
-        const el = node.domFrag().oneElement()
-        const left = getBoundingClientRect(el).left
-        if (left + el.offsetWidth < clientX) {
-            return cursor.insAtRightEnd(this)
+    seek(clientX: number, cursor: Cursor): void {
+        let node = this.getEnd(R)
+        if (!node) {
+            cursor.insAtRightEnd(this)
+            return
         }
-
-        var endsL = this.getEnd(L) as MQNode
-        if (clientX < getBoundingClientRect(endsL.domFrag().oneElement()).left)
-            return cursor.insAtLeftEnd(this)
-        while (clientX < getBoundingClientRect(node.domFrag().oneElement()).left)
-            node = node[L] as MQNode
-        return node.seek(clientX, cursor)
+        const el = node.domFrag().oneElement()
+        if (getBoundingClientRect(el).left + el.offsetWidth < clientX) {
+            cursor.insAtRightEnd(this)
+            return
+        }
+        const first = this.getEnd(L) as MQNode
+        if (clientX < getBoundingClientRect(first.domFrag().oneElement()).left) {
+            cursor.insAtLeftEnd(this)
+            return
+        }
+        while (clientX < getBoundingClientRect(node.domFrag().oneElement()).left) node = node[L] as MQNode
+        node.seek(clientX, cursor)
     }
 
-    focus() {
+    focus(): void {
         this.domFrag().addClass('mq-hasCursor')
         this.domFrag().removeClass('mq-empty')
-
-        return this
     }
 
-    blur(cursor: Cursor) {
+    blur(cursor?: Cursor): void {
         this.domFrag().removeClass('mq-hasCursor')
         if (this.isEmpty()) {
             this.domFrag().addClass('mq-empty')
-            if (
-                cursor &&
-                this.isQuietEmptyDelimiter(cursor.options.quietEmptyDelimiters)
-            ) {
+            if (cursor && this.isQuietEmptyDelimiter(cursor.options.quietEmptyDelimiters)) {
                 this.domFrag().addClass('mq-quiet-delimiter')
             }
         }
-        return this
     }
 }
 
-export class RootMathBlock extends MathBlock { }
+/**
+ * Root block of an editable field. Reaching its edges, or changing its
+ * content, is reported to the field's handlers.
+ */
+export class RootMathBlock extends MathBlock {
+    private get ctrl(): Controller {
+        if (!this.controller) throw new Error('root block without controller')
+        return this.controller
+    }
+
+    moveOutOf(dir: Direction): void {
+        this.ctrl.handle('moveOutOf', dir)
+    }
+    deleteOutOf(dir: Direction): void {
+        this.ctrl.handle('deleteOutOf', dir)
+    }
+    selectOutOf(dir: Direction): void {
+        this.ctrl.handle('selectOutOf', dir)
+    }
+    upOutOf = (): undefined => {
+        this.ctrl.handle('upOutOf')
+        return undefined
+    }
+    downOutOf = (): undefined => {
+        this.ctrl.handle('downOutOf')
+        return undefined
+    }
+    reflow(): void {
+        this.ctrl.handle('reflow')
+        this.ctrl.handle('edited')
+        this.ctrl.handle('edit')
+    }
+}

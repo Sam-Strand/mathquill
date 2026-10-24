@@ -62,14 +62,14 @@ $mq-border-style: solid !default;
 // Font-face
 // ==========================================================================
 
+// ?no-inline: в lib-режиме Vite иначе вшивает шрифты в CSS как base64 (все форматы
+// сразу, ~2.5 МБ). Отдельными файлами браузер скачивает только нужный формат.
+// eot/svg/ttf убраны: нужны только IE и старым мобильным браузерам
 @font-face {
     font-family: $mq-font-symbola;
-    src: url(fonts/Symbola.eot);
     src: local("Symbola Regular"), local("Symbola"),
-        url(fonts/Symbola.woff2) format("woff2"),
-        url(fonts/Symbola.woff) format("woff"),
-        url(fonts/Symbola.ttf) format("truetype"),
-        url(fonts/Symbola.svg#Symbola) format("svg");
+        url("fonts/Symbola.woff2?no-inline") format("woff2"),
+        url("fonts/Symbola.woff?no-inline") format("woff");
 }
 
 // ==========================================================================

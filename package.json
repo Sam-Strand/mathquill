@@ -32,9 +32,9 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.10",
     "@vue/language-core": "^3.3.13",
-    "sass": "^1.106.0",
+    "sass": "^1.106.1",
     "typescript": "^7.0.2",
-    "vite": "^8.3.4",
+    "vite": "^8.3.5",
     "hjson": "workspace:*",
     "vite-plugin-dts": "^5.1.2"
   },

@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>MathQuill regression suite</title>
+    <style>
+        body { font: 14px/1.4 system-ui, sans-serif; margin: 2em; }
+        /* the fields get the browser's default font, independent of this page's styles */
+        #mock { font: initial; position: absolute; left: 0; top: 0; opacity: 0.01; }
+        .warn { color: #8a5a00 }
+        .pass { color: #187a3c } .fail { color: #b3261e }
+        pre { background: #f5f5f5; padding: .5em; white-space: pre-wrap; word-break: break-all; font-size: 12px }
+        details { margin: .3em 0 }
+    </style>
+    <script>
+        // scenarios clear leftover cursor-blink intervals between fields
+        ;(() => {
+            const set = window.setInterval, clear = window.clearInterval, live = new Set()
+            window.setInterval = (f, t, ...a) => { const id = set(f, t, ...a); live.add(id); return id }
+            window.clearInterval = (id) => { live.delete(id); clear(id) }
+            window.__clearAllIntervals = () => { for (const id of live) clear(id); live.clear() }
+        })()
+    </script>
+</head>
+<body>
+    <h1>MathQuill regression suite</h1>
+    <p>Runs every scenario of <code>regression/scenarios.js</code> through the public API and compares with
+        <code>regression/snapshot.json</code>. After an intended behaviour change, check the differences and
+        save the new snapshot over the old one.</p>
+    <p id="status">Running…</p>
+    <button id="download" hidden>Download new snapshot.json</button>
+    <div id="report"></div>
+    <div id="mock"></div>
+
+    <script type="module">
+        import MathQuill from '../src/index.ts'
+        import { runAll } from './regression/scenarios.js'
+        import corpus from './regression/corpus.json'
+        import snapshot from './regression/snapshot.json'
+
+        const status = document.getElementById('status')
+        const results = await runAll(MathQuill, corpus, (n) => (status.textContent = `Running… ${n} scenarios`))
+
+        // Up/Down (without a remembered position) and mouse clicks place the cursor
+        // by pixel coordinates, so their results depend on fonts and the browser.
+        const layoutSensitive = (k) =>
+            /^(click|drag|clickAt):/.test(k) || k === 'misc' || (/^keys\[/.test(k) && /\| .*\b(?<!Shift-)(Up|Down)\b/.test(k))
+
+        const keys = new Set([...Object.keys(snapshot), ...Object.keys(results)])
+        const differ = [...keys].filter((k) => JSON.stringify(snapshot[k]) !== JSON.stringify(results[k]))
+        const failures = differ.filter((k) => !layoutSensitive(k))
+        const warnings = differ.filter(layoutSensitive)
+        status.className = failures.length ? 'fail' : warnings.length ? 'warn' : 'pass'
+        status.textContent =
+            (failures.length
+                ? `${failures.length} of ${keys.size} scenarios differ from the snapshot`
+                : warnings.length
+                  ? `All ${keys.size - warnings.length} layout-independent scenarios match the snapshot`
+                  : `All ${keys.size} scenarios match the snapshot`) +
+            (warnings.length ? `; ${warnings.length} layout-dependent ones differ (fonts / browser), see below` : '')
+        window.regressionResults = results
+        window.regressionFailures = failures
+        window.regressionWarnings = warnings
+
+        const report = document.getElementById('report')
+        const show = (list, title) => {
+            if (!list.length) return
+            const h = document.createElement('h3')
+            h.textContent = title
+            report.append(h)
+            for (const k of list.slice(0, 300)) {
+                const d = document.createElement('details')
+                const s = document.createElement('summary')
+                s.textContent = k
+                const pre = document.createElement('pre')
+                pre.textContent = 'expected: ' + JSON.stringify(snapshot[k], null, 1) + '\nactual:   ' + JSON.stringify(results[k], null, 1)
+                d.append(s, pre)
+                report.append(d)
+            }
+        }
+        show(failures, 'Differences')
+        show(warnings, 'Layout-dependent differences (usually harmless: cursor placed by pixel position)')
+
+        const button = document.getElementById('download')
+        button.hidden = false
+        button.onclick = () => {
+            const a = document.createElement('a')
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(results)], { type: 'application/json' }))
+            a.download = 'snapshot.json'
+            a.click()
+        }
+    </script>
+</body>
+</html>

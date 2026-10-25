@@ -59,10 +59,6 @@ class InnerMathFieldNode extends MathCommand {
     latex(): string {
         return this.getEnd(L).latex()
     }
-
-    text(): string {
-        return this.getEnd(L).text()
-    }
 }
 
 latexCommands.define(['editable', 'MathQuillMathField'], InnerMathFieldNode)

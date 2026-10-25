@@ -183,15 +183,6 @@ export class SupSub extends MathCommand {
         return part('_', this.sub) + part('^', this.sup)
     }
 
-    text(): string {
-        const part = (prefix: string, block: NodeRef | undefined) => {
-            if (!block) return ''
-            const t = block.text() || ''
-            return prefix + (t.length === 1 ? t : '(' + (t || ' ') + ')')
-        }
-        return part('_', this.sub) + part('^', this.sup)
-    }
-
     /** Add the missing sub or sup block. */
     addBlock(block: MathBlock): void {
         if (this.supsub === 'sub') {

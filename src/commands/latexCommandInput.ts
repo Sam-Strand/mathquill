@@ -87,10 +87,6 @@ export class LatexCommandInput extends MathCommand {
         return '\\' + this.getEnd(L).latex() + ' '
     }
 
-    text(): string {
-        return this.latex()
-    }
-
     /** Replace this input by the command whose name was typed. */
     renderCommand(cursor: Cursor): MQNode {
         this.remove()

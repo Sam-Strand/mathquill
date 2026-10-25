@@ -45,7 +45,7 @@ export class MQSelection extends Fragment {
         return this
     }
 
-    join(method: 'latex' | 'text', separator = ''): string {
-        return this.fold('', (fold, child) => fold + separator + child[method]())
+    latex(): string {
+        return this.fold('', (fold, child) => fold + child.latex())
     }
 }

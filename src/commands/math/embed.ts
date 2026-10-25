@@ -24,10 +24,6 @@ export class EmbedNode extends MQSymbol {
         if (this.domView) super.createLeftOf(cursor)
     }
 
-    text(): string {
-        return this.options.text ? this.options.text() : ''
-    }
-
     latex(): string {
         return this.options.latex ? this.options.latex() : ''
     }

@@ -262,7 +262,6 @@ Insert a custom embedded element at the given coordinates, where `options` is an
 ```js
 {
   htmlString: '<span class="custom-embed"></span>',
-  text: function() { return 'custom_embed'; },
   latex: function() { return '\\customEmbed'; }
 }
 ```

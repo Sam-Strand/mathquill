@@ -51,9 +51,6 @@ const OPP_BRACKS: Record<string, string> = {
     '\\rVert ': '\\lVert ',
 }
 
-/** Plain-text rendering of bracket characters. */
-const BRACKET_TEXT: Record<string, string> = { '&lang;': '⟨', '&rang;': '⟩', '&#8741;': '‖' }
-
 const NO_SYMBOL: ScalableSymbol = { width: '0', html: () => h.text('') }
 
 interface BracketSideInfo {
@@ -122,11 +119,6 @@ export class Bracket extends DelimsNode {
 
     latex(): string {
         return '\\left' + this.sides[L].ctrlSeq + this.getEnd(L).latex() + '\\right' + this.sides[R].ctrlSeq
-    }
-
-    text(): string {
-        const t = (ch: string) => BRACKET_TEXT[ch] ?? ch
-        return t(this.sides[L].ch) + this.getEnd(L).text() + t(this.sides[R].ch)
     }
 
     /** `node` if it is a one-sided bracket that can pair with this one on `expectedSide`, else false. */
@@ -404,7 +396,6 @@ const rightParen = SVG_SYMBOLS[')']
 /** `\binom{n}{k}` */
 class Binomial extends DelimsNode {
     ctrlSeq = '\\binom'
-    textTemplate = ['choose(', ',', ')']
     domView = new DOMView(2, (blocks) =>
         h('span', { class: 'mq-non-leaf mq-bracket-container' }, [
             h('span', { style: 'width:' + leftParen.width, class: 'mq-paren mq-bracket-l mq-scaled' }, [leftParen.html()]),

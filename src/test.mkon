@@ -1,0 +1,17 @@
+# sets.hjson
+{
+  kind: binary                     # по умолчанию для всего файла
+  symbols: {
+    subseteq: { html: '⊆', aliases: ['sube', 'subeq', 'subsete'] }   # latex = "\subseteq "
+    in:       { html: ∈, aliases: [isin] }
+    nsubset:  { html: ⊄, latex: \not\subset, aliases: [notsub, notsubset] }
+    cap:      ∩, aliases: [intersect, intersection] }
+    ominus:   ⊖                    # краткая форма: только html, без алиасов
+  }
+}
+
+я думаю все лушче символами если они есть
+мы ведь моем поулчить по символу его код а значит компу пофиг а человеку графика важнее
+во вторых ты немного нарушил спецификацию hjson будь с этим аккуратнее
+если мы пишем в строку список то кавычки обязательыне для не чисел иначе он считает все строкой
+кстати на самом деле я контроли

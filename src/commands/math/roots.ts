@@ -12,7 +12,6 @@ import { Digit } from './symbols'
 
 export class SquareRoot extends MathCommand {
     ctrlSeq = '\\sqrt'
-    textTemplate = ['sqrt(', ')']
     domView = new DOMView(1, (blocks) =>
         h('span', { class: 'mq-non-leaf mq-sqrt-container' }, [
             h('span', { class: 'mq-scaled mq-sqrt-prefix' }, [SVG_SYMBOLS.sqrt.html()]),
@@ -46,7 +45,6 @@ export class NthRoot extends SquareRoot {
             ]),
         ])
     )
-    textTemplate = ['sqrt[', '](', ')']
 
     latex(): string {
         return '\\sqrt[' + this.getEnd(L).latex() + ']{' + this.getEnd(R).latex() + '}'

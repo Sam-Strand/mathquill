@@ -71,10 +71,6 @@ export class TextBlock extends MQNode {
         return this.foldChildren('', (text, child) => text + (child as TextPiece).textStr)
     }
 
-    text(): string {
-        return '"' + this.textContents() + '"'
-    }
-
     latex(): string {
         const contents = this.textContents()
         if (contents.length === 0) return ''
@@ -372,7 +368,6 @@ defineTextStyle(['lowercase'], '\\lowercase', 'span', { style: 'text-transform:l
 
 /** `$...$`: a math island inside a TextField. */
 export class RootMathCommand extends MathCommand {
-    textTemplate = ['$', '$']
     domView = new DOMView(1, (blocks) => h.block('span', { class: 'mq-math-mode' }, blocks[0]))
 
     constructor() {

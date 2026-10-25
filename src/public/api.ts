@@ -48,10 +48,6 @@ export abstract class AbstractMathQuill implements BaseMathQuillApi {
         return this.controller.container
     }
 
-    text(): string {
-        return this.controller.latex.exportText()
-    }
-
     latex(): string
     latex(latex: unknown): this
     latex(latex?: unknown): string | this {

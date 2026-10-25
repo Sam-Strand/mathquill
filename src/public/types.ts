@@ -69,7 +69,6 @@ export interface Config {
 /** What a registered embed renders as. */
 export interface EmbedOptions {
     htmlString?: string
-    text?: () => string
     latex?: () => string
 }
 
@@ -83,7 +82,6 @@ export interface BaseMathQuillApi {
     el(): HTMLElement
     latex(): string
     latex(latex: string): this
-    text(): string
     html(): string
     reflow(): this
     config(config: Config): this

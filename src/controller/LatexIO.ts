@@ -1,5 +1,5 @@
 /*********************************************
- * LaTeX and text import / export of a whole field.
+ * LaTeX import / export of a whole field.
  ********************************************/
 import { L, R } from '../core/direction'
 import { domFrag } from '../core/domFragment'
@@ -29,10 +29,6 @@ export class LatexIO {
 
     exportLatex(): string {
         return cleanLatex(this.ctrlr.root.latex())
-    }
-
-    exportText(): string {
-        return this.ctrlr.root.foldChildren('', (text, child) => text + child.text())
     }
 
     /** Insert LaTeX at the cursor. */

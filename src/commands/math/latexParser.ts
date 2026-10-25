@@ -62,7 +62,7 @@ function buildLatexMathParser(): LatexMathParser {
     const optMathBlock = string('[')
         .then(
             mathBlock
-                .then((block) => (block.join('latex') !== ']' ? Parser.succeed(block) : fail('')))
+                .then((block) => (block.latex() !== ']' ? Parser.succeed(block) : fail('')))
                 .many()
                 .map(joinBlocks)
                 .skip(optWhitespace)

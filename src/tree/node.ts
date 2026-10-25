@@ -50,8 +50,6 @@ export class MQNode {
     downInto: MQNode | undefined
     upOutOf: UpDownTarget | undefined
     downOutOf: UpDownTarget | undefined
-    /** Set on letters that are part of an auto-operator name like `sin`. */
-    isPartOfOperator: boolean | undefined
 
     private el: Element | Text | undefined
 
@@ -162,10 +160,6 @@ export class MQNode {
     }
 
     // ---- serialization ---------------------------------------------------
-
-    text(): string {
-        return ''
-    }
 
     latex(): string {
         return ''

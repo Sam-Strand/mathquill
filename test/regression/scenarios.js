@@ -1,6 +1,6 @@
 // Behaviour-capture scenarios for the regression suite (test/index.html).
 // Uses ONLY the public MathQuill API, so results stay comparable across
-// internal refactorings. Each scenario records LaTeX / text / HTML output.
+// internal refactorings. Each scenario records LaTeX / HTML output.
 export async function runAll(MQ, corpus, onProgress) {
     const results = {}
     const mock = document.getElementById('mock')
@@ -25,7 +25,7 @@ export async function runAll(MQ, corpus, onProgress) {
         }
     }
     function snap(mq, withHtml) {
-        const o = { latex: safe(() => mq.latex()), text: safe(() => mq.text()) }
+        const o = { latex: safe(() => mq.latex()) }
         if (withHtml) o.html = safe(() => mq.html())
         return o
     }
@@ -237,7 +237,7 @@ export async function runAll(MQ, corpus, onProgress) {
 
     // 9. embeds
     record('embed', () => {
-        MQ.registerEmbed('thing', (data) => ({ htmlString: '<span class="thing">T' + (data || '') + '</span>', text: () => 'T', latex: () => '\\embed{thing}[' + (data || '') + ']' }))
+        MQ.registerEmbed('thing', (data) => ({ htmlString: '<span class="thing">T' + (data || '') + '</span>', latex: () => '\\embed{thing}[' + (data || '') + ']' }))
         const mq = MQ.MathField(fresh())
         safe(() => mq.latex('1+\\embed{thing}[abc]+2'))
         const out = { a: snap(mq, true) }
@@ -454,7 +454,7 @@ export async function runAll(MQ, corpus, onProgress) {
     // 14. static math interactions
     record('static-select', () => {
         const st = MQ.StaticMath(fresh('span', '\\frac{1}{2}'))
-        return { kd: safe(() => (st.keystroke && st.keystroke('Left'), 'ok')), html: st.html(), text: st.text() }
+        return { kd: safe(() => (st.keystroke && st.keystroke('Left'), 'ok')), html: st.html() }
     })
     // 16. misc interactions
     await (async () => {
@@ -496,7 +496,7 @@ export async function runAll(MQ, corpus, onProgress) {
             tf.typedText('ab$x^2')
             tf.keystroke('Right')
             tf.typedText('c')
-            out.textField = [tf.latex(), tf.text()]
+            out.textField = tf.latex()
             tf.keystroke('Left Left Left Left Backspace')
             out.textField2 = tf.latex()
         }

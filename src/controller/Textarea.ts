@@ -137,7 +137,7 @@ export class Textarea {
         const selection = this.ctrlr.cursor.selection
         let latex = ''
         if (selection) {
-            latex = cleanLatex(selection.join('latex'))
+            latex = cleanLatex(selection.latex())
             // FIXME: like paste, this only works for math fields
             if (this.ctrlr.options.statelessClipboard) latex = '$' + latex + '$'
         }

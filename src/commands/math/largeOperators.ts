@@ -40,11 +40,6 @@ export class SummationNotation extends MathCommand {
         return this.ctrlSeq + '_' + simplify(this.getEnd(L).latex()) + '^' + simplify(this.getEnd(R).latex())
     }
 
-    text(): string {
-        const name = (this.ctrlSeq || '').replace(/^\\/, '').trim()
-        return name + '_(' + this.getEnd(L).text() + ')^(' + this.getEnd(R).text() + ')'
-    }
-
     /** Limits are optional and may come in either order: `\sum^{n}_{i=0}`. */
     parser(): Parser<MQNode | Fragment> {
         const blocks = (this.blocks = [new MathBlock(), new MathBlock()])

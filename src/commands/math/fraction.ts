@@ -16,7 +16,6 @@ import { TextBlock } from '../text'
 
 export class Fraction extends MathCommand {
     ctrlSeq = '\\frac'
-    textTemplate = ['(', ')/(', ')']
     domView = new DOMView(2, (blocks) =>
         h('span', { class: 'mq-fraction mq-non-leaf' }, [
             h.block('span', { class: 'mq-numerator' }, blocks[0]),

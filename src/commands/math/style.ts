@@ -48,8 +48,7 @@ latexCommands.define(
                         h.block('span', { class: 'mq-empty-box' }, blocks[0]),
                     ]),
                 ])
-            ),
-            ['dot(', ')']
+            )
         )
 )
 
@@ -63,14 +62,13 @@ latexCommands.define(
                     h('span', { class: 'mq-hat-prefix' }, [h.text('^')]),
                     h.block('span', { class: 'mq-hat-stem' }, blocks[0]),
                 ])
-            ),
-            ['hat(', ')']
+            )
         )
 )
 
 /** An accent drawn above the block (`\vec`, `\tilde`). */
 class DiacriticAbove extends MathCommand {
-    constructor(ctrlSeq: string, accent: Node, name: string) {
+    constructor(ctrlSeq: string, accent: Node) {
         super(
             ctrlSeq,
             new DOMView(1, (blocks) =>
@@ -78,13 +76,12 @@ class DiacriticAbove extends MathCommand {
                     h('span', { class: 'mq-diacritic-above' }, [accent.cloneNode(true)]),
                     h.block('span', { class: 'mq-diacritic-stem' }, blocks[0]),
                 ])
-            ),
-            [name + '(', ')']
+            )
         )
     }
 }
-latexCommands.define('vec', () => new DiacriticAbove('\\vec', h.entityText('&rarr;'), 'vec'))
-latexCommands.define('tilde', () => new DiacriticAbove('\\tilde', h.text('~'), 'tilde'))
+latexCommands.define('vec', () => new DiacriticAbove('\\vec', h.entityText('&rarr;')))
+latexCommands.define('tilde', () => new DiacriticAbove('\\tilde', h.text('~')))
 
 /**
  * `\textcolor{color}{math}` colors its content; `color` is any CSS color.

@@ -78,17 +78,11 @@ export class MathCommand extends MathElement {
     declare blocks: MathBlock[] | undefined
     replacedFragment: Fragment | undefined
     domView: DOMView | undefined
-    /**
-     * Text export: `textTemplate[0] + block0.text() + textTemplate[1] + block1.text() + ...`.
-     * Defaults to the plain concatenation of the blocks.
-     */
-    textTemplate: readonly string[] = ['']
 
-    constructor(ctrlSeq?: string, domView?: DOMView, textTemplate?: readonly string[]) {
+    constructor(ctrlSeq?: string, domView?: DOMView) {
         super()
         if (ctrlSeq !== undefined) this.ctrlSeq = ctrlSeq
         if (domView) this.domView = domView
-        if (textTemplate) this.textTemplate = textTemplate
     }
 
     setEnds(ends: Ends<NodeRef>): void {
@@ -250,28 +244,12 @@ export class MathCommand extends MathElement {
         return this.foldChildren(this.ctrlSeq || '', (latex, child) => latex + '{' + (child.latex() || ' ') + '}')
     }
 
-    text(): string {
-        const template = this.textTemplate
-        let i = 0
-        return this.foldChildren(template[0], (text, child) => {
-            i += 1
-            const childText = child.text()
-            // avoid doubled parentheses, e.g. `(a+b)/(c)` rather than `((a+b))/(c)`
-            if (text && template[i] === '(' && childText[0] === '(' && childText.slice(-1) === ')') {
-                return text + childText.slice(1, -1) + template[i]
-            }
-            return text + childText + (template[i] || '')
-        })
-    }
 }
 
 /** A command without blocks: letters, digits, operators, constants. */
 export class MQSymbol extends MathCommand {
-    private readonly textOverride: string | undefined
-
-    constructor(ctrlSeq?: string, html?: Element, text?: string) {
+    constructor(ctrlSeq?: string, html?: Element) {
         super(ctrlSeq, html ? new DOMView(0, () => html.cloneNode(true) as Element) : undefined)
-        this.textOverride = text
     }
 
     parser(): Parser<MQNode | Fragment> {
@@ -310,11 +288,6 @@ export class MQSymbol extends MathCommand {
         return this.ctrlSeq || ''
     }
 
-    text(): string {
-        if (this.textOverride !== undefined) return this.textOverride
-        return (this.ctrlSeq || '').replace(/^\\/, '').trim()
-    }
-
     placeCursor(): void {}
 
     isEmpty(): boolean {
@@ -334,29 +307,28 @@ export class ParseOnlyCommand extends MathCommand {
 }
 
 export class VanillaSymbol extends MQSymbol {
-    constructor(ch: string, html?: Node, text?: string) {
-        super(ch, h('span', {}, [html || h.text(ch)]), text)
+    constructor(ch: string, html?: Node) {
+        super(ch, h('span', {}, [html || h.text(ch)]))
     }
 }
 
 export class BinaryOperator extends MQSymbol {
-    constructor(ctrlSeq?: string, html?: Node, treatLikeSymbol?: boolean, text?: string) {
+    constructor(ctrlSeq?: string, html?: Node, treatLikeSymbol?: boolean) {
         super(
             ctrlSeq,
             treatLikeSymbol
                 ? h('span', {}, [html || h.text(ctrlSeq || '')])
-                : h('span', { class: 'mq-binary-operator' }, html ? [html] : []),
-            text
+                : h('span', { class: 'mq-binary-operator' }, html ? [html] : [])
         )
     }
 }
 
-export function bindVanillaSymbol(ch: string, htmlEntity?: string, text?: string) {
-    return () => new VanillaSymbol(ch, htmlEntity ? h.entityText(htmlEntity) : undefined, text)
+export function bindVanillaSymbol(ch: string, htmlEntity?: string) {
+    return () => new VanillaSymbol(ch, htmlEntity ? h.entityText(htmlEntity) : undefined)
 }
 
-export function bindBinaryOperator(ctrlSeq: string, htmlEntity?: string, text?: string) {
-    return () => new BinaryOperator(ctrlSeq, htmlEntity ? h.entityText(htmlEntity) : undefined, false, text)
+export function bindBinaryOperator(ctrlSeq: string, htmlEntity?: string) {
+    return () => new BinaryOperator(ctrlSeq, htmlEntity ? h.entityText(htmlEntity) : undefined)
 }
 
 /**
@@ -376,9 +348,6 @@ export class MathBlock extends MathElement {
         return this.parent instanceof MathCommand ? this.parent : undefined
     }
 
-    join(method: 'latex' | 'text'): string {
-        return this.foldChildren('', (fold, child) => fold + child[method]())
-    }
 
     html(): Node {
         const fragment = document.createDocumentFragment()
@@ -389,12 +358,7 @@ export class MathBlock extends MathElement {
     }
 
     latex(): string {
-        return this.join('latex')
-    }
-
-    text(): string {
-        const endsL = this.getEnd(L)
-        return endsL && endsL === this.getEnd(R) ? endsL.text() : this.join('text')
+        return this.foldChildren('', (fold, child) => fold + child.latex())
     }
 
     handleKeystroke(key: string, e: KeyboardEvent | undefined, ctrlr: Controller): boolean {

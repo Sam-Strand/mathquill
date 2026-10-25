@@ -171,22 +171,6 @@ export class Variable extends MQSymbol {
     constructor(chOrCtrlSeq: string, html?: Node) {
         super(chOrCtrlSeq, h('var', {}, [html || h.text(chOrCtrlSeq)]))
     }
-
-    text(): string {
-        let text = this.ctrlSeq || ''
-        if (this.isPartOfOperator) {
-            if (text[0] === '\\') text = text.slice(1)
-            else if (text[text.length - 1] === ' ') text = text.slice(0, -1)
-        } else {
-            const left = this[L]
-            const right = this[R]
-            if (left && !(left instanceof Variable) && !(left instanceof BinaryOperator) && left.ctrlSeq !== '\\ ') {
-                text = '*' + text
-            }
-            if (right && !(right instanceof BinaryOperator) && !(right instanceof SupSub)) text += '*'
-        }
-        return text
-    }
 }
 
 function bindVariable(ctrlSeq: string, htmlEntity: string) {
@@ -264,7 +248,6 @@ export class Letter extends Variable {
 
     italicize(italic: boolean): this {
         this.isItalic = italic
-        this.isPartOfOperator = !italic
         this.domFrag().toggleClass('mq-operator-name', !italic)
         return this
     }
@@ -382,11 +365,11 @@ class OperatorName extends MQSymbol {
 }
 latexCommands.define(operatorNameList(), OperatorName)
 
-export const AnsBuilder = () => new MQSymbol('\\operatorname{ans}', h('span', { class: 'mq-ans' }, [h.text('ans')]), 'ans')
+export const AnsBuilder = () => new MQSymbol('\\operatorname{ans}', h('span', { class: 'mq-ans' }, [h.text('ans')]))
 latexCommands.define('ans', AnsBuilder)
 
 export const PercentOfBuilder = () =>
-    new MQSymbol('\\%\\operatorname{of}', h('span', { class: 'mq-nonSymbola mq-operator-name' }, [h.text('% of ')]), '% of')
+    new MQSymbol('\\%\\operatorname{of}', h('span', { class: 'mq-nonSymbola mq-operator-name' }, [h.text('% of ')]))
 latexCommands.define(['percent', 'percentof'], PercentOfBuilder)
 
 /** `\operatorname{name}` */
@@ -429,30 +412,30 @@ latexCommands.define(
 // Vanilla symbols
 // ---------------------------------------------------------------------------
 
-latexCommands.define([' ', 'space'], () => new DigitGroupingChar('\\ ', h('span', {}, [h.text(U_NO_BREAK_SPACE)]), ' '))
+latexCommands.define([' ', 'space'], () => new DigitGroupingChar('\\ ', h('span', {}, [h.text(U_NO_BREAK_SPACE)])))
 latexCommands.define('.', () => new DigitGroupingChar('.', h('span', { class: 'mq-digit' }, [h.text('.')])))
 
 latexCommands.define(["'", 'prime'], bindVanillaSymbol("'", '&prime;'))
 latexCommands.define(['″', 'dprime'], bindVanillaSymbol('″', '&Prime;'))
 latexCommands.define('backslash', bindVanillaSymbol('\\backslash ', '\\'))
-latexCommands.define('$', bindVanillaSymbol('\\$', '$', '$'))
+latexCommands.define('$', bindVanillaSymbol('\\$', '$'))
 latexCommands.define('square', bindVanillaSymbol('\\square ', '□'))
-latexCommands.define('mid', bindVanillaSymbol('\\mid ', '∣', '|'))
+latexCommands.define('mid', bindVanillaSymbol('\\mid ', '∣'))
 
 /** Symbol that does not use the Symbola font. */
 class NonSymbolaSymbol extends MQSymbol {
-    constructor(ch: string, html?: Node, text?: string) {
-        super(ch, h('span', { class: 'mq-nonSymbola' }, [html || h.text(ch)]), text)
+    constructor(ch: string, html?: Node) {
+        super(ch, h('span', { class: 'mq-nonSymbola' }, [html || h.text(ch)]))
     }
 }
 
 latexCommands.define('@', () => new NonSymbolaSymbol('@'))
-latexCommands.define('&', () => new NonSymbolaSymbol('\\&', h.entityText('&amp;'), '&'))
+latexCommands.define('&', () => new NonSymbolaSymbol('\\&', h.entityText('&amp;')))
 latexCommands.define(
     '%',
     class extends NonSymbolaSymbol {
         constructor() {
-            super('\\%', h.text('%'), '%')
+            super('\\%', h.text('%'))
         }
         parser() {
             // parse `\%\operatorname{of}` as one `percentof` node, so it serializes and deletes as a unit
@@ -488,8 +471,8 @@ latexCommands.define(['kappav', 'varkappa'], bindVariable('\\varkappa ', '&#1008
 latexCommands.define(['rhov', 'varrho'], bindVariable('\\varrho ', '&#1009;'))
 
 // Greek constants look best upright in Times New Roman
-latexCommands.define(['pi', 'π'], () => new NonSymbolaSymbol('\\pi ', h.entityText('&pi;'), 'pi'))
-latexCommands.define('lambda', () => new NonSymbolaSymbol('\\lambda ', h.entityText('&lambda;'), 'lambda'))
+latexCommands.define(['pi', 'π'], () => new NonSymbolaSymbol('\\pi ', h.entityText('&pi;')))
+latexCommands.define('lambda', () => new NonSymbolaSymbol('\\lambda ', h.entityText('&lambda;')))
 
 // Symbola's "upsilon with hook" is a capital Y without hooks, so use a serif font
 latexCommands.define(
@@ -560,8 +543,8 @@ function isBinaryOperator(node: NodeRef): boolean {
 }
 
 export class PlusMinus extends BinaryOperator {
-    constructor(ch?: string, html?: Node, text?: string) {
-        super(ch, html, true, text)
+    constructor(ch?: string, html?: Node) {
+        super(ch, html, true)
     }
 
     contactWeld(_cursor: Cursor, dir?: Direction): void {
@@ -598,11 +581,11 @@ class MinusNode extends PlusMinus {
 // unicode minus, em-dash, en-dash, hyphen
 latexCommands.define(['−', '—', '–', '-'], MinusNode)
 
-latexCommands.define(['±', 'pm', 'plusmn', 'plusminus'], () => new PlusMinus('\\pm ', h.entityText('&plusmn;'), '+-'))
-latexCommands.define(['mp', 'mnplus', 'minusplus'], () => new PlusMinus('\\mp ', h.entityText('&#8723;'), '-+'))
+latexCommands.define(['±', 'pm', 'plusmn', 'plusminus'], () => new PlusMinus('\\pm ', h.entityText('&plusmn;')))
+latexCommands.define(['mp', 'mnplus', 'minusplus'], () => new PlusMinus('\\mp ', h.entityText('&#8723;')))
 
 // semantically &sdot;, but &middot; looks better
-const cdot = bindBinaryOperator('\\cdot ', '&middot;', '*')
+const cdot = bindBinaryOperator('\\cdot ', '&middot;')
 charCommands.define('*', cdot)
 latexCommands.define(['sdot', 'cdot'], cdot)
 
@@ -621,7 +604,7 @@ function retype(cursor: Cursor, old: MQNode, replacement: MQNode, oldAndThis?: M
 
 class To extends BinaryOperator {
     constructor() {
-        super('\\to ', h.entityText('&rarr;'), false, '->')
+        super('\\to ', h.entityText('&rarr;'))
     }
     deleteTowards(dir: Direction, cursor: Cursor): void {
         if (dir === L) {
@@ -638,25 +621,19 @@ interface InequalityData {
     ctrlSeqStrict: string
     htmlEntity: string
     htmlEntityStrict: string
-    text: string
-    textStrict: string
 }
 
 const LESS: InequalityData = {
     ctrlSeq: '\\le ',
     htmlEntity: '&le;',
-    text: '≤',
     ctrlSeqStrict: '<',
     htmlEntityStrict: '&lt;',
-    textStrict: '<',
 }
 const GREATER: InequalityData = {
     ctrlSeq: '\\ge ',
     htmlEntity: '&ge;',
-    text: '≥',
     ctrlSeqStrict: '>',
     htmlEntityStrict: '&gt;',
-    textStrict: '>',
 }
 
 /** `<` / `>`; typing `=` after a strict one makes it `≤` / `≥`, Backspace reverts. */
@@ -674,10 +651,6 @@ class Inequality extends BinaryOperator {
         this.domFrag()
             .children()
             .replaceWith(domFrag(h.entityText(strict ? this.data.htmlEntityStrict : this.data.htmlEntity)))
-    }
-
-    text(): string {
-        return this.strict ? this.data.textStrict : this.data.text
     }
 
     deleteTowards(dir: Direction, cursor: Cursor): void {
@@ -709,7 +682,7 @@ latexCommands.define(['>', 'gt'], Greater)
 latexCommands.define(['≤', 'le', 'leq'], () => new Inequality(LESS, false))
 latexCommands.define(['≥', 'ge', 'geq'], () => new Inequality(GREATER, false))
 latexCommands.define(['infty', 'infin', 'infinity'], bindVanillaSymbol('\\infty ', '&infin;'))
-latexCommands.define(['≠', 'ne', 'neq'], bindBinaryOperator('\\ne ', '&ne;', '≠'))
+latexCommands.define(['≠', 'ne', 'neq'], bindBinaryOperator('\\ne ', '&ne;'))
 
 export class Equality extends BinaryOperator {
     constructor() {
@@ -727,12 +700,12 @@ export class Equality extends BinaryOperator {
 }
 latexCommands.define('=', Equality)
 
-latexCommands.define(['×', 'times'], bindBinaryOperator('\\times ', '&times;', '[x]'))
-latexCommands.define(['÷', 'div', 'divide', 'divides'], bindBinaryOperator('\\div ', '&divide;', '[/]'))
+latexCommands.define(['×', 'times'], bindBinaryOperator('\\times ', '&times;'))
+latexCommands.define(['÷', 'div', 'divide', 'divides'], bindBinaryOperator('\\div ', '&divide;'))
 
 class Sim extends BinaryOperator {
     constructor() {
-        super('\\sim ', h.text('~'), false, '~')
+        super('\\sim ', h.text('~'))
     }
     createLeftOf(cursor: Cursor): void {
         const cursorL = cursor[L]
@@ -746,7 +719,7 @@ class Sim extends BinaryOperator {
 
 class Approx extends BinaryOperator {
     constructor() {
-        super('\\approx ', h.entityText('&approx;'), false, '~~')
+        super('\\approx ', h.entityText('&approx;'))
     }
     deleteTowards(dir: Direction, cursor: Cursor): void {
         if (dir === L) {

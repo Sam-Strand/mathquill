@@ -1,13 +1,13 @@
 /************************************
  * Symbols for advanced mathematics (set theory, logic, arrows, ...),
- * mostly defined as data in symbols-config.hjson.
+ * mostly defined as data in symbols-config.mkon.
  ***********************************/
 import { h } from '../../core/dom'
 import { Parser } from '../../core/parser'
 import type { MQNode } from '../../tree/node'
 import { latexCommands } from '../registry'
 import { BinaryOperator, ParseOnlyCommand, bindBinaryOperator, bindVanillaSymbol } from './core'
-import config from './symbols-config.hjson'
+import config from './symbols-config.mkon'
 
 for (const { aliases, latex, html } of config.binarySymbols) {
     latexCommands.define(aliases, bindBinaryOperator(latex, html))

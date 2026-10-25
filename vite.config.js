@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
 import vue from '@vitejs/plugin-vue'
-import hjson from 'hjson/vite-plugin-hjson'
+import mkon from 'mkon/vite-plugin-mkon'
 
 export default defineConfig({
     // Относительные пути к шрифтам в собранном CSS: файлы лежат рядом в dist
@@ -13,7 +13,7 @@ export default defineConfig({
         }
     },
     plugins: [
-        hjson(),
+        mkon(),
         vue(),
         dts()
     ],

@@ -1,4 +1,4 @@
-// Сгенерировано vite-plugin-hjson из symbols-config.hjson. Не редактируйте вручную.
+// Сгенерировано vite-plugin-mkon из symbols-config.mkon. Не редактируйте вручную.
 declare const value: {
     binarySymbols: {
         aliases: string[]

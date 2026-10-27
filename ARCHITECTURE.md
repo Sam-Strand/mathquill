@@ -35,7 +35,7 @@ options.ts     опции поля, значения по умолчанию, п
 * `index.ts`: точка сборки. Импортирует модули команд в фиксированном порядке. Если два модуля регистрируют одно имя, побеждает поздний.
 * `math/core.ts`: `MathBlock`, `MathCommand`, `MQSymbol`, `RootMathBlock`. Блок передаёт контекстное поведение своей команде через хуки `writeInBlock` и `deleteOutOfBlock`. Так SupSub и Bracket меняют поведение своих блоков без подмены методов у экземпляров.
 * `math/latexParser.ts`: грамматика math-mode LaTeX.
-* Модули по темам: `symbols.ts` (буквы, цифры, операторы, греческие буквы), `supsub.ts`, `fraction.ts`, `roots.ts`, `brackets.ts`, `largeOperators.ts`, `style.ts`, `advancedSymbols.ts`, `innerField.ts`, `embed.ts`, `operatorNames.ts`.
+* Модули по темам: `symbols.ts` (буквы, цифры, операторы, греческие буквы), `supsub.ts`, `fraction.ts`, `roots.ts`, `brackets.ts`, `largeOperators.ts`, `style.ts`, `advancedSymbols.ts`, `innerField.ts`, `embed.ts`, `linebreak.ts` (`\\`), `operatorNames.ts`.
 * `text.ts` (`\text{}`, корень TextField), `latexCommandInput.ts` (ввод `\команды`).
 
 ### Данные в `.mkon`

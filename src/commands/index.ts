@@ -14,6 +14,7 @@ import './math/roots'
 import './math/brackets'
 import './math/innerField'
 import './math/embed'
+import './math/linebreak'
 import './math/symbols'
 
 export { latexCommands, charCommands, embeds } from './registry'

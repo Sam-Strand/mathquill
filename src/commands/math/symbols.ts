@@ -532,8 +532,8 @@ function isBinaryOperator(node: NodeRef): boolean {
     if (!node) return false
     const nodeL = node[L]
     if (nodeL) {
-        // unary after another operator, a separator or an opening bracket
-        return !(nodeL instanceof BinaryOperator || /^(\\ )|[,;:([]$/.test(nodeL.ctrlSeq || ''))
+        // unary after another operator, a separator, an opening bracket or a line break
+        return !(nodeL instanceof BinaryOperator || /^(\\ |\\\\)|[,;:([]$/.test(nodeL.ctrlSeq || ''))
     }
     // at the left edge of a style block, look through the style block
     if (node.parent && node.parent.parent && node.parent.parent.isStyleBlock()) {

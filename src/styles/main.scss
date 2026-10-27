@@ -312,6 +312,14 @@ $mq-border-style: solid !default;
         box-sizing: border-box;
     }
 
+    // `\\` — перенос строки. Внутри пустой <br>, он форсирует разрыв даже при
+    // `white-space: nowrap` у корневого блока, так что раскладку менять не нужно.
+    // Фон выделения на нулевой ширине не виден, поэтому разрыв внутри выделения
+    // рисуется обычным пробелом в конце строки.
+    .mq-linebreak {
+        display: inline;
+    }
+
     .mq-empty {
         background: var(--mq-color-empty-bg, #{$mq-color-empty-bg});
 

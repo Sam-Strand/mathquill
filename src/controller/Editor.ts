@@ -125,6 +125,11 @@ export class Editor {
                 this.selectAll()
                 return true
 
+            // Enter без модификатора остаётся за обработчиком `enter`
+            case 'Shift-Enter':
+                this.cmd('\\newline')
+                return true
+
             // reserved, so the browser default does not kick in
             case 'Ctrl-Left':
             case 'Ctrl-Right':

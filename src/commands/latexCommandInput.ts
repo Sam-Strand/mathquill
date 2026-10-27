@@ -34,10 +34,15 @@ class CommandNameBlock extends MathBlock {
             new VanillaSymbol(ch).createLeftOf(cursor)
             return
         }
+        // `\` typed into a still-empty name means the user typed `\\`, which is a
+        // command in its own right (a line break) — not a command with no name
+        if (ch === '\\' && this.isEmpty()) {
+            this.input.renderCommand(cursor, '\\')
+            return
+        }
         // any other character ends the name: render the command, then type the character after it
-        const wasEmpty = this.isEmpty()
         this.input.renderCommand(cursor)
-        if (ch !== '\\' || !wasEmpty) cursor.parent.write(cursor, ch)
+        cursor.parent.write(cursor, ch)
     }
 
     handleKeystroke(key: string, e: KeyboardEvent | undefined, ctrlr: Controller): boolean {
@@ -87,14 +92,17 @@ export class LatexCommandInput extends MathCommand {
         return '\\' + this.getEnd(L).latex() + ' '
     }
 
-    /** Replace this input by the command whose name was typed. */
-    renderCommand(cursor: Cursor): MQNode {
+    /**
+     * Replace this input by the command whose name was typed, or by `named`
+     * when the name cannot be spelled inside the input (`\\`).
+     */
+    renderCommand(cursor: Cursor, named?: string): MQNode {
         this.remove()
         const right = this[R]
         if (right) cursor.insLeftOf(right)
         else cursor.insAtRightEnd(this.parent)
 
-        const name = this.getEnd(L).latex() || ' '
+        const name = named ?? (this.getEnd(L).latex() || ' ')
         const cmd = latexCommands.create(name)
         if (cmd) {
             if (this.wrapped) cmd.replaces(this.wrapped)

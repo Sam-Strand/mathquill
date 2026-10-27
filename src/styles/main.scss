@@ -776,3 +776,7 @@ html body .mq-editable-field .mq-selection .mq-nthroot-container * {
         box-sizing: content-box;
     }
 }
+
+.mq-bracket-container:has(br) {
+    vertical-align: middle;
+}

@@ -13,18 +13,71 @@
 // ==========================================================================
 
 // Colors
+//
+// Каждый цвет доступен на двух уровнях. SCSS-переменная задаёт значение по
+// умолчанию и вшивается в собранный CSS; одноимённая CSS-переменная с
+// префиксом `--mq-` перекрывает её во время выполнения, поэтому тему можно
+// переключать на лету, не пересобирая стили. Полный список и пример тёмной
+// темы — в docs/Theming.md.
+
+// Символы, включая SVG-глифы скобок и радикала, а также линии: дробная черта,
+// черта корня, надчёркивания, дуги.
+// currentColor: поле наследует цвет текста страницы, и тёмная тема работает
+// без единой настройки.
+$mq-color-text: currentColor !default;
+// Каретка.
+$mq-color-cursor: currentColor !default;
+
+// Выделение в сфокусированном поле.
+$mq-color-selection: #b4d5fe !default;
+// currentColor — символы внутри выделения сохраняют свой цвет.
+$mq-color-selection-text: currentColor !default;
+// Выделение в поле, потерявшем фокус.
+$mq-color-selection-blur: #d4d4d4 !default;
+$mq-color-selection-text-blur: $mq-color-text !default;
+
+// Затенение пустого блока: место под пустым \sqrt, пустой числитель и т.п.
+$mq-color-empty-bg: rgba(0, 0, 0, 0.2) !default;
+// Непарная скобка-призрак.
+$mq-ghost-opacity: 0.2 !default;
+
+// Рамка редактируемого поля и подсветка фокуса.
 $mq-color-border: gray !default;
 $mq-color-border-focused: #709ac0 !default;
+// Было `ActiveBorder` — системный цвет CSS2, выпиленный из спецификации.
+$mq-color-border-active: #709ac0 !default;
 $mq-color-shadow-focused: #8bd !default;
 $mq-color-shadow-inset-focused: #6ae !default;
-$mq-color-selection: #b4d5fe !default;
-$mq-color-selection-blur: #d4d4d4 !default;
-$mq-color-empty-bg: rgba(0, 0, 0, 0.2) !default;
-$mq-color-text: black !default;
-$mq-color-cursor: currentColor !default;
-$mq-color-ghost: rgba(0, 0, 0, 0.2) !default;
+// Подсветка блока \text, внутри которого стоит каретка.
 $mq-color-hasCursor-shadow: darkgray !default;
-$mq-color-border-active: ActiveBorder !default;
+
+// Переменные объявляются здесь, а не только как fallback внутри `var()`.
+// Так они всегда существуют, их видно в DevTools на любом элементе, и сразу
+// понятно, доезжает ли до поля ваше переопределение.
+//
+// Перебить можно откуда угодно выше поля — с `:root.theme-dark`, с контейнера
+// темы, с самого поля. Если стили библиотеки подключены в слой
+// (`@import 'mathquill/mathquill.css' layer(vendor)`), любое объявление вне
+// слоя выигрывает независимо от специфичности.
+:root {
+    --mq-color-text: #{$mq-color-text};
+    --mq-color-cursor: #{$mq-color-cursor};
+
+    --mq-color-selection: #{$mq-color-selection};
+    --mq-color-selection-text: #{$mq-color-selection-text};
+    --mq-color-selection-blur: #{$mq-color-selection-blur};
+    --mq-color-selection-text-blur: #{$mq-color-selection-text-blur};
+
+    --mq-color-empty-bg: #{$mq-color-empty-bg};
+    --mq-ghost-opacity: #{$mq-ghost-opacity};
+
+    --mq-color-border: #{$mq-color-border};
+    --mq-color-border-focused: #{$mq-color-border-focused};
+    --mq-color-border-active: #{$mq-color-border-active};
+    --mq-color-shadow-focused: #{$mq-color-shadow-focused};
+    --mq-color-shadow-inset-focused: #{$mq-color-shadow-inset-focused};
+    --mq-color-hascursor-shadow: #{$mq-color-hasCursor-shadow};
+}
 
 // Fonts
 $mq-font-symbola: Symbola !default;
@@ -55,21 +108,20 @@ $mq-spacing-margin-vertical: 1px !default;
 
 // Borders
 $mq-border-width: 1px !default;
-$mq-border-color: $mq-color-text !default;
 $mq-border-style: solid !default;
 
 // ==========================================================================
 // Font-face
 // ==========================================================================
 
-// ?no-inline: в lib-режиме Vite иначе вшивает шрифты в CSS как base64 (все форматы
-// сразу, ~2.5 МБ). Отдельными файлами браузер скачивает только нужный формат.
-// eot/svg/ttf убраны: нужны только IE и старым мобильным браузерам
+// ?no-inline: в lib-режиме Vite иначе вшивает шрифт в CSS как base64.
+// Отдельным файлом он кешируется браузером и не раздувает CSS.
+// Остался только woff2: eot/svg/ttf нужны IE и мобильным браузерам до 2014,
+// woff — IE 11, Safari 9 и Android 4.x.
 @font-face {
     font-family: $mq-font-symbola;
     src: local("Symbola Regular"), local("Symbola"),
-        url("fonts/Symbola.woff2?no-inline") format("woff2"),
-        url("fonts/Symbola.woff?no-inline") format("woff");
+        url("Symbola.woff2?no-inline") format("woff2");
 }
 
 // ==========================================================================
@@ -81,7 +133,7 @@ $mq-border-style: solid !default;
     display: inline-block;
 
     .mq-cursor {
-        border-left: $mq-border-width solid $mq-color-cursor;
+        border-left: $mq-border-width solid var(--mq-color-cursor, #{$mq-color-cursor});
         margin-left: -$mq-border-width;
         position: relative;
         z-index: 1;
@@ -97,18 +149,18 @@ $mq-border-style: solid !default;
 
 .mq-editable-field,
 .mq-math-mode .mq-editable-field {
-    border: $mq-border-width solid $mq-color-border;
+    color: var(--mq-color-text, #{$mq-color-text});
+    border: $mq-border-width solid var(--mq-color-border, #{$mq-color-border});
 }
 
 .mq-editable-field.mq-focused,
 .mq-math-mode .mq-editable-field.mq-focused {
-    -webkit-box-shadow: $mq-color-shadow-focused 0 0 1px 2px,
-        inset $mq-color-shadow-inset-focused 0 0 2px 0;
-    -moz-box-shadow: $mq-color-shadow-focused 0 0 1px 2px,
-        inset $mq-color-shadow-inset-focused 0 0 2px 0;
-    box-shadow: $mq-color-shadow-focused 0 0 1px 2px,
-        inset $mq-color-shadow-inset-focused 0 0 2px 0;
-    border-color: $mq-color-border-focused;
+    $focus-ring: var(--mq-color-shadow-focused, #{$mq-color-shadow-focused}) 0 0 1px 2px,
+        inset var(--mq-color-shadow-inset-focused, #{$mq-color-shadow-inset-focused}) 0 0 2px 0;
+    -webkit-box-shadow: $focus-ring;
+    -moz-box-shadow: $focus-ring;
+    box-shadow: $focus-ring;
+    border-color: var(--mq-color-border-focused, #{$mq-color-border-focused});
 }
 
 .mq-math-mode .mq-editable-field {
@@ -118,7 +170,7 @@ $mq-border-style: solid !default;
 .mq-editable-field .mq-latex-command-input {
     color: inherit;
     font-family: $mq-font-courier;
-    border: $mq-border-width solid $mq-color-border;
+    border: $mq-border-width solid var(--mq-color-border, #{$mq-color-border});
     padding-right: $mq-spacing-margin-vertical;
     margin-right: $mq-spacing-margin-vertical;
     margin-left: $mq-spacing-padding;
@@ -128,7 +180,7 @@ $mq-border-style: solid !default;
     }
 
     &.mq-hasCursor {
-        border-color: $mq-color-border-active;
+        border-color: var(--mq-color-border-active, #{$mq-color-border-active});
     }
 }
 
@@ -215,6 +267,7 @@ $mq-border-style: solid !default;
 // ==========================================================================
 
 .mq-math-mode {
+    color: var(--mq-color-text, #{$mq-color-text});
     font-variant: normal;
     font-weight: normal;
     font-style: normal;
@@ -237,7 +290,8 @@ $mq-border-style: solid !default;
     }
 
     svg {
-        fill: $mq-color-cursor;
+        // скобки и радикал — такие же символы, как остальные
+        fill: var(--mq-color-text, #{$mq-color-text});
         position: absolute;
         top: 0;
         left: 0;
@@ -250,7 +304,8 @@ $mq-border-style: solid !default;
         line-height: inherit;
         margin: 0;
         padding: 0;
-        border-color: $mq-color-text;
+        // дробная черта, черта корня, над-/подчёркивания рисуются рамками
+        border-color: var(--mq-color-text, #{$mq-color-text});
         -webkit-user-select: none;
         -moz-user-select: none;
         user-select: none;
@@ -258,7 +313,7 @@ $mq-border-style: solid !default;
     }
 
     .mq-empty {
-        background: $mq-color-empty-bg;
+        background: var(--mq-color-empty-bg, #{$mq-color-empty-bg});
 
         &.mq-root-block {
             background: transparent;
@@ -278,7 +333,7 @@ $mq-border-style: solid !default;
         white-space: pre;
 
         &.mq-hasCursor {
-            box-shadow: inset $mq-color-hasCursor-shadow 0 0.1em 0.2em;
+            box-shadow: inset var(--mq-color-hascursor-shadow, #{$mq-color-hasCursor-shadow}) 0 0.1em 0.2em;
             padding: 0 $mq-spacing-padding-small;
             margin: 0 $mq-spacing-margin-negative-medium;
             min-width: 1ex;
@@ -413,7 +468,7 @@ $mq-border-style: solid !default;
     }
 
     .mq-ghost svg {
-        opacity: 0.2;
+        opacity: var(--mq-ghost-opacity, #{$mq-ghost-opacity});
     }
 
     .mq-bracket-middle {
@@ -592,7 +647,8 @@ $mq-border-style: solid !default;
 }
 
 .mq-math-mode .mq-overarc {
-    border-top: $mq-border-width solid $mq-color-border;
+    // дуга — такая же математическая черта, как \overline: цвет символов, не рамки поля
+    border-top: $mq-border-width solid var(--mq-color-text, #{$mq-color-text});
     -webkit-border-top-right-radius: 50% 0.3em;
     -moz-border-radius-topright: 50% 0.3em;
     border-top-right-radius: 50% 0.3em;
@@ -605,7 +661,7 @@ $mq-border-style: solid !default;
 
 .mq-math-mode .mq-overarrow {
     min-width: 0.5em;
-    border-top: $mq-border-width solid $mq-color-border;
+    border-top: $mq-border-width solid var(--mq-color-text, #{$mq-color-text});
     margin-top: $mq-spacing-margin-vertical;
     padding-top: $mq-spacing-margin-medium;
     text-align: center;
@@ -640,13 +696,26 @@ $mq-border-style: solid !default;
     }
 }
 
+// Фон задаётся и на самом выделении, и на вложенных блоках: у них есть свои
+// фоны, которые иначе просвечивали бы дырками. Цвет символов достаточно
+// задать один раз — он наследуется внутрь.
 .mq-math-mode .mq-selection,
 .mq-editable-field .mq-selection,
 .mq-math-mode .mq-selection .mq-non-leaf,
 .mq-editable-field .mq-selection .mq-non-leaf,
 .mq-math-mode .mq-selection .mq-scaled,
 .mq-editable-field .mq-selection .mq-scaled {
-    background: $mq-color-selection !important;
+    background: var(--mq-color-selection, #{$mq-color-selection}) !important;
+}
+
+// `*` нужен, чтобы цвет перебил `border-color` из общего правила выше:
+// иначе дробная черта внутри выделения осталась бы цвета обычных символов.
+.mq-math-mode .mq-selection,
+.mq-math-mode .mq-selection *,
+.mq-editable-field .mq-selection,
+.mq-editable-field .mq-selection * {
+    color: var(--mq-color-selection-text, #{$mq-color-selection-text});
+    border-color: var(--mq-color-selection-text, #{$mq-color-selection-text});
 }
 
 .mq-math-mode .mq-selection.mq-blur,
@@ -655,9 +724,15 @@ $mq-border-style: solid !default;
 .mq-editable-field .mq-selection.mq-blur .mq-non-leaf,
 .mq-math-mode .mq-selection.mq-blur .mq-scaled,
 .mq-editable-field .mq-selection.mq-blur .mq-scaled {
-    background: $mq-color-selection-blur !important;
-    color: $mq-color-text;
-    border-color: $mq-color-text;
+    background: var(--mq-color-selection-blur, #{$mq-color-selection-blur}) !important;
+}
+
+.mq-math-mode .mq-selection.mq-blur,
+.mq-math-mode .mq-selection.mq-blur *,
+.mq-editable-field .mq-selection.mq-blur,
+.mq-editable-field .mq-selection.mq-blur * {
+    color: var(--mq-color-selection-text-blur, #{$mq-color-selection-text-blur});
+    border-color: var(--mq-color-selection-text-blur, #{$mq-color-selection-text-blur});
 }
 
 html body .mq-math-mode .mq-selection .mq-nthroot-container *,

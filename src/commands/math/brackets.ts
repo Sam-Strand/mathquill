@@ -17,6 +17,7 @@ import { DOMView, MathCommand, ParseOnlyCommand, type MathBlock } from './core'
 import { latexMathParser } from './latexParser'
 import { SVG_SYMBOLS, type ScalableSymbol } from './svgSymbols'
 import { takeLeftTermAsFirstBlock } from './fraction'
+import config from './brackets-config.mkon'
 
 /** 0 = two-sided; L / R = only the left / right bracket is real, the other is a ghost. */
 export type BracketSide = Direction | 0
@@ -33,23 +34,18 @@ class DelimsNode extends MathCommand {
     }
 }
 
-const OPP_BRACKS: Record<string, string> = {
-    '(': ')',
-    ')': '(',
-    '[': ']',
-    ']': '[',
-    '{': '}',
-    '}': '{',
-    '\\{': '\\}',
-    '\\}': '\\{',
-    '&lang;': '&rang;',
-    '&rang;': '&lang;',
-    '\\langle ': '\\rangle ',
-    '\\rangle ': '\\langle ',
-    '|': '|',
-    '\\lVert ': '\\rVert ',
-    '\\rVert ': '\\lVert ',
+/** Every bracket and every control sequence mapped to its counterpart. */
+const OPP_BRACKS: Record<string, string> = {}
+for (const { open, close, openLatex, closeLatex } of config.pairs) {
+    OPP_BRACKS[open] = close
+    OPP_BRACKS[close] = open
+    OPP_BRACKS[openLatex] = closeLatex
+    OPP_BRACKS[closeLatex] = openLatex
 }
+
+/** Mismatched closers that are still accepted, as in the interval `[a, b)`. */
+const TOLERATED_CLOSE: Record<string, string> = {}
+for (const { open, close } of config.tolerantPairs) TOLERATED_CLOSE[open] = close
 
 const NO_SYMBOL: ScalableSymbol = { width: '0', html: () => h.text('') }
 
@@ -128,7 +124,7 @@ export class Bracket extends DelimsNode {
             const mine = this.sides[this.side || R].ch
             const matches =
                 OPP_BRACKS[mine] === node.sides[node.side].ch ||
-                ({ '(': ']', '[': ')' } as Record<string, string>)[this.sides[L].ch] === node.sides[R].ch
+                TOLERATED_CLOSE[this.sides[L].ch] === node.sides[R].ch
             if (!matches) return false
         }
         return node
@@ -323,54 +319,59 @@ function oppositeBracketSide(bracket: Bracket): BracketSideInfo {
     return { ch: OPP_BRACKS[data.ch], ctrlSeq: OPP_BRACKS[data.ctrlSeq] }
 }
 
-function defineCharBracketPair(open: string, ctrlSeq = open): void {
-    const close = OPP_BRACKS[open]
-    const end = OPP_BRACKS[ctrlSeq]
-    charCommands.define(open, () => new Bracket(L, open, close, ctrlSeq, end))
-    charCommands.define(close, () => new Bracket(R, open, close, ctrlSeq, end))
-}
-defineCharBracketPair('(')
-defineCharBracketPair('[')
-defineCharBracketPair('{', '\\{')
-charCommands.define('|', () => new Bracket(L, '|', '|', '|', '|'))
-latexCommands.define('langle', () => new Bracket(L, '&lang;', '&rang;', '\\langle ', '\\rangle '))
-latexCommands.define('rangle', () => new Bracket(R, '&lang;', '&rang;', '\\langle ', '\\rangle '))
-latexCommands.define('lVert', () => new Bracket(L, '&#8741;', '&#8741;', '\\lVert ', '\\rVert '))
-latexCommands.define('rVert', () => new Bracket(R, '&#8741;', '&#8741;', '\\lVert ', '\\rVert '))
+for (const { open, close, openLatex, closeLatex, typed, openCommand, closeCommand } of config.pairs) {
+    const makeLeft = () => new Bracket(L, open, close, openLatex, closeLatex)
+    const makeRight = () => new Bracket(R, open, close, openLatex, closeLatex)
 
-/** `\left( ... \right)` */
+    if (typed !== 'none') {
+        charCommands.define(open, makeLeft)
+        // `typed: open` for `|`, where registering the closer would shadow the opener
+        if (typed === 'both') charCommands.define(close, makeRight)
+    }
+    if (openCommand) latexCommands.define(openCommand, makeLeft)
+    if (closeCommand) latexCommands.define(closeCommand, makeRight)
+}
+
+type BracketPair = (typeof config.pairs)[number]
+
+/** Delimiters by the token that follows `\left` / `\right` (the control sequence, trimmed). */
+const OPEN_BY_TOKEN = new Map<string, BracketPair>()
+const CLOSE_BY_TOKEN = new Map<string, BracketPair>()
+for (const pair of config.pairs) {
+    OPEN_BY_TOKEN.set(pair.openLatex.trim(), pair)
+    CLOSE_BY_TOKEN.set(pair.closeLatex.trim(), pair)
+}
+
+/** Matches any of `tokens`; a `\word` token must not be followed by a letter. */
+function tokenPattern(tokens: Iterable<string>): RegExp {
+    const alternatives = [...tokens].map((token) =>
+        /^\\[a-zA-Z]+$/.test(token)
+            ? token.replace('\\', '\\\\') + '(?![a-zA-Z])'
+            : token.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&')
+    )
+    return new RegExp('^(?:' + alternatives.join('|') + ')')
+}
+
+const OPEN_PATTERN = tokenPattern(OPEN_BY_TOKEN.keys())
+const CLOSE_PATTERN = tokenPattern(CLOSE_BY_TOKEN.keys())
+
+/** `\left( ... \right)`; the two sides need not match (`\left[ ... \right)`). */
 latexCommands.define(
     'left',
     class extends ParseOnlyCommand {
         parser(): Parser<MQNode | Fragment> {
             const { regex, string, optWhitespace } = Parser
             return optWhitespace
-                .then(regex(/^(?:[([|]|\\\{|\\langle(?![a-zA-Z])|\\lVert(?![a-zA-Z]))/))
-                .then((ctrlSeq) => {
-                    let open = ctrlSeq.replace(/^\\/, '')
-                    if (ctrlSeq == '\\langle') {
-                        open = '&lang;'
-                        ctrlSeq = ctrlSeq + ' '
-                    }
-                    if (ctrlSeq == '\\lVert') {
-                        open = '&#8741;'
-                        ctrlSeq = ctrlSeq + ' '
-                    }
+                .then(regex(OPEN_PATTERN))
+                .then((openToken) => {
+                    const open = OPEN_BY_TOKEN.get(openToken)!
                     return latexMathParser.then((block) =>
                         string('\\right')
                             .skip(optWhitespace)
-                            .then(regex(/^(?:[\])|]|\\\}|\\rangle(?![a-zA-Z])|\\rVert(?![a-zA-Z]))/))
-                            .map((end) => {
-                                let close = end.replace(/^\\/, '')
-                                if (end == '\\rangle') {
-                                    close = '&rang;'
-                                    end = end + ' '
-                                }
-                                if (end == '\\rVert') {
-                                    close = '&#8741;'
-                                    end = end + ' '
-                                }
-                                const cmd = new Bracket(0, open, close, ctrlSeq, end)
+                            .then(regex(CLOSE_PATTERN))
+                            .map((closeToken) => {
+                                const close = CLOSE_BY_TOKEN.get(closeToken)!
+                                const cmd = new Bracket(0, open.open, close.close, open.openLatex, close.closeLatex)
                                 cmd.blocks = [block]
                                 block.adopt(cmd, 0, 0)
                                 return cmd

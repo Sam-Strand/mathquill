@@ -1,0 +1,81 @@
+/*
+Разделители: (), [], {}, ⟨⟩, ||, ‖‖.
+
+Одна запись описывает пару целиком; из неё выводятся
+  * таблица противоположных скобок (OPP_BRACKS),
+  * регистрация в charCommands / latexCommands,
+  * регулярки для разбора \left … \right.
+
+  open / close           — что показывается (символ или html-мнемоника)
+  openLatex / closeLatex — управляющие последовательности LaTeX
+  typed                  — both: набор любой из скобок с клавиатуры даёт пару
+                           open: с клавиатуры набирается только левая
+                           none: с клавиатуры не набирается
+  openCommand /          — имена \команд; пустая строка, если команды нет
+  closeCommand
+*/
+pairs: [
+    {
+        open: (
+        close: )
+        openLatex: (
+        closeLatex: )
+        typed: both
+        openCommand: ''
+        closeCommand: ''
+    }
+    {
+        open: '['
+        close: ']'
+        openLatex: '['
+        closeLatex: ']'
+        typed: both
+        openCommand: ''
+        closeCommand: ''
+    }
+    {
+        open: '{'
+        close: '}'
+        openLatex: '''\{'''
+        closeLatex: '''\}'''
+        typed: both
+        openCommand: ''
+        closeCommand: ''
+    }
+    {
+        // открывающая и закрывающая совпадают: вторая регистрация затёрла бы первую
+        open: |
+        close: |
+        openLatex: |
+        closeLatex: |
+        typed: open
+        openCommand: ''
+        closeCommand: ''
+    }
+    {
+        open: &lang;
+        close: &rang;
+        openLatex: '''\langle '''
+        closeLatex: '''\rangle '''
+        typed: none
+        openCommand: langle
+        closeCommand: rangle
+    }
+    {
+        open: &#8741;
+        close: &#8741;
+        openLatex: '''\lVert '''
+        closeLatex: '''\rVert '''
+        typed: none
+        openCommand: lVert
+        closeCommand: rVert
+    }
+]
+/*
+Несовпадающие, но допустимые при restrictMismatchedBrackets пары:
+интервалы вида [a, b) и (a, b].
+*/
+tolerantPairs: [
+    {open: (, close: ']'}
+    {open: '[', close: )}
+]

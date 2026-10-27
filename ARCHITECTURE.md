@@ -35,8 +35,20 @@ options.ts     опции поля, значения по умолчанию, п
 * `index.ts`: точка сборки. Импортирует модули команд в фиксированном порядке. Если два модуля регистрируют одно имя, побеждает поздний.
 * `math/core.ts`: `MathBlock`, `MathCommand`, `MQSymbol`, `RootMathBlock`. Блок передаёт контекстное поведение своей команде через хуки `writeInBlock` и `deleteOutOfBlock`. Так SupSub и Bracket меняют поведение своих блоков без подмены методов у экземпляров.
 * `math/latexParser.ts`: грамматика math-mode LaTeX.
-* Модули по темам: `symbols.ts` (буквы, цифры, операторы, греческие буквы), `supsub.ts`, `fraction.ts`, `roots.ts`, `brackets.ts`, `largeOperators.ts`, `style.ts`, `advancedSymbols.ts` (+ `symbols-config.json`), `innerField.ts`, `embed.ts`, `operatorNames.ts`.
+* Модули по темам: `symbols.ts` (буквы, цифры, операторы, греческие буквы), `supsub.ts`, `fraction.ts`, `roots.ts`, `brackets.ts`, `largeOperators.ts`, `style.ts`, `advancedSymbols.ts`, `innerField.ts`, `embed.ts`, `operatorNames.ts`.
 * `text.ts` (`\text{}`, корень TextField), `latexCommandInput.ts` (ввод `\команды`).
+
+### Данные в `.mkon`
+
+То, что является таблицей, а не поведением, лежит рядом с модулем в конфиге. `vite-plugin-mkon` разбирает его при сборке и генерирует соседний `*.d.mkon.ts` с типами — этот файл править руками не нужно.
+
+| конфиг | что описывает | кто читает |
+|---|---|---|
+| `math/symbols-config.mkon` | бинарные и vanilla-символы: алиасы, LaTeX, html | `advancedSymbols.ts` |
+| `math/svg-symbols.mkon` | SVG-глифы скобок и корня: `width`, `viewBox`, `d` | `svgSymbols.ts` |
+| `math/brackets-config.mkon` | пары разделителей | `brackets.ts` |
+
+Из `brackets-config.mkon` выводятся сразу четыре вещи: таблица противоположных скобок, регистрация в `charCommands` и `latexCommands`, регулярки разбора `\left … \right` и список допустимых несовпадающих пар. Добавить разделитель — это одна запись в конфиге, код трогать не нужно.
 
 ## controller/
 

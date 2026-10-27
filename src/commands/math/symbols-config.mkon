@@ -1,42 +1,36 @@
 binarySymbols: [
     {
-        aliases: [
-            ∗
-            ast
-            star
-            loast
-            lowast
-        ]
+        aliases: [∗, ast, star, loast, lowast]
         latex: '''\ast '''
         html: &lowast;
     }
     {
-        aliases: ['therefor', 'therefore']
+        aliases: [therefor, therefore]
         latex: '''\therefore '''
         html: &there4;
     }
     {
-        aliases: ['cuz', 'because']
+        aliases: [cuz, because]
         latex: '''\because '''
         html: &#8757;
     }
     {
-        aliases: ['prop', 'propto']
+        aliases: [prop, propto]
         latex: '''\propto '''
         html: &prop;
     }
     {
-        aliases: ['≈', 'asymp', 'approx']
+        aliases: [≈, asymp, approx]
         latex: '''\approx '''
         html: &asymp;
     }
     {
-        aliases: ['isin', 'in']
+        aliases: [isin, in]
         latex: '''\in '''
         html: &isin;
     }
     {
-        aliases: ['ni', 'contains']
+        aliases: [ni, contains]
         latex: '''\ni '''
         html: &ni;
     }
@@ -51,12 +45,12 @@ binarySymbols: [
         html: &#8716;
     }
     {
-        aliases: ['sub', 'subset']
+        aliases: [sub, subset]
         latex: '''\subset '''
         html: &sub;
     }
     {
-        aliases: ['sup', 'supset', 'superset']
+        aliases: [sup, supset, superset]
         latex: '''\supset '''
         html: &sup;
     }
@@ -83,12 +77,7 @@ binarySymbols: [
         html: &#8837;
     }
     {
-        aliases: [
-            sube
-            subeq
-            subsete
-            subseteq
-        ]
+        aliases: [sube, subeq, subsete, subseteq]
         latex: '''\subseteq '''
         html: &sube;
     }
@@ -137,46 +126,42 @@ binarySymbols: [
         html: &#8841;
     }
     {
-        aliases: ['impliedby']
+        aliases: [impliedby]
         latex: '''\Leftarrow '''
         html: &lArr;
     }
     {
-        aliases: ['iff']
+        aliases: [iff]
         latex: '''\Leftrightarrow '''
         html: &hArr;
     }
     {
-        aliases: ['gets']
+        aliases: [gets]
         latex: '''\gets '''
         html: &larr;
     }
     {
-        aliases: ['implies']
+        aliases: [implies]
         latex: '''\Rightarrow '''
         html: &rArr;
     }
     {
-        aliases: ['and', 'land', 'wedge']
+        aliases: [and, land, wedge]
         latex: '''\wedge '''
         html: &and;
     }
     {
-        aliases: ['or', 'lor', 'vee']
+        aliases: [or, lor, vee]
         latex: '''\vee '''
         html: &or;
     }
     {
-        aliases: ['cup', 'union']
+        aliases: [cup, union]
         latex: '''\cup '''
         html: &cup;
     }
     {
-        aliases: [
-            cap
-            intersect
-            intersection
-        ]
+        aliases: [cap, intersect, intersection]
         latex: '''\cap '''
         html: &cap;
     }
@@ -197,7 +182,7 @@ binarySymbols: [
 ]
 vanillaSymbols: [
     {
-        aliases: ['N', 'naturals', 'Naturals']
+        aliases: [N, naturals, Naturals]
         latex: \mathbb{N}
         html: &#8469;
     }
@@ -215,17 +200,17 @@ vanillaSymbols: [
         html: &#8473;
     }
     {
-        aliases: ['Z', 'integers', 'Integers']
+        aliases: [Z, integers, Integers]
         latex: \mathbb{Z}
         html: &#8484;
     }
     {
-        aliases: ['Q', 'rationals', 'Rationals']
+        aliases: [Q, rationals, Rationals]
         latex: \mathbb{Q}
         html: &#8474;
     }
     {
-        aliases: ['R', 'reals', 'Reals']
+        aliases: [R, reals, Reals]
         latex: \mathbb{R}
         html: &#8477;
     }
@@ -254,97 +239,97 @@ vanillaSymbols: [
         html: &#8461;
     }
     {
-        aliases: ['longleftarrow']
+        aliases: [longleftarrow]
         latex: '''\longleftarrow '''
         html: &#8592;
     }
     {
-        aliases: ['longrightarrow']
+        aliases: [longrightarrow]
         latex: '''\longrightarrow '''
         html: &#8594;
     }
     {
-        aliases: ['Longleftarrow']
+        aliases: [Longleftarrow]
         latex: '''\Longleftarrow '''
         html: &#8656;
     }
     {
-        aliases: ['Longrightarrow']
+        aliases: [Longrightarrow]
         latex: '''\Longrightarrow '''
         html: &#8658;
     }
     {
-        aliases: ['longleftrightarrow']
+        aliases: [longleftrightarrow]
         latex: '''\longleftrightarrow '''
         html: &#8596;
     }
     {
-        aliases: ['updownarrow']
+        aliases: [updownarrow]
         latex: '''\updownarrow '''
         html: &#8597;
     }
     {
-        aliases: ['Longleftrightarrow']
+        aliases: [Longleftrightarrow]
         latex: '''\Longleftrightarrow '''
         html: &#8660;
     }
     {
-        aliases: ['Updownarrow']
+        aliases: [Updownarrow]
         latex: '''\Updownarrow '''
         html: &#8661;
     }
     {
-        aliases: ['mapsto']
+        aliases: [mapsto]
         latex: '''\mapsto '''
         html: &#8614;
     }
     {
-        aliases: ['nearrow']
+        aliases: [nearrow]
         latex: '''\nearrow '''
         html: &#8599;
     }
     {
-        aliases: ['hookleftarrow']
+        aliases: [hookleftarrow]
         latex: '''\hookleftarrow '''
         html: &#8617;
     }
     {
-        aliases: ['hookrightarrow']
+        aliases: [hookrightarrow]
         latex: '''\hookrightarrow '''
         html: &#8618;
     }
     {
-        aliases: ['searrow']
+        aliases: [searrow]
         latex: '''\searrow '''
         html: &#8600;
     }
     {
-        aliases: ['leftharpoonup']
+        aliases: [leftharpoonup]
         latex: '''\leftharpoonup '''
         html: &#8636;
     }
     {
-        aliases: ['rightharpoonup']
+        aliases: [rightharpoonup]
         latex: '''\rightharpoonup '''
         html: &#8640;
     }
     {
-        aliases: ['swarrow']
+        aliases: [swarrow]
         latex: '''\swarrow '''
         html: &#8601;
     }
     {
-        aliases: ['leftharpoondown']
+        aliases: [leftharpoondown]
         latex: '''\leftharpoondown '''
         html: &#8637;
     }
     {
-        aliases: ['rightharpoondown']
+        aliases: [rightharpoondown]
         latex: '''\rightharpoondown '''
         html: &#8641;
     }
     {
-        aliases: ['nwarrow']
+        aliases: [nwarrow]
         latex: '''\nwarrow '''
         html: &#8598;
     }
@@ -370,475 +355,467 @@ vanillaSymbols: [
         html: &dArr;
     }
     {
-        aliases: ['diverges', 'uarr', 'uparrow']
+        aliases: [diverges, uarr, uparrow]
         latex: '''\uparrow '''
         html: &uarr;
     }
     {
-        aliases: ['uArr', 'Uparrow']
+        aliases: [uArr, Uparrow]
         latex: '''\Uparrow '''
         html: &uArr;
     }
     {
-        aliases: ['rarr', 'rightarrow']
+        aliases: [rarr, rightarrow]
         latex: '''\rightarrow '''
         html: &rarr;
     }
     {
-        aliases: ['rArr', 'Rightarrow']
+        aliases: [rArr, Rightarrow]
         latex: '''\Rightarrow '''
         html: &rArr;
     }
     {
-        aliases: ['larr', 'leftarrow']
+        aliases: [larr, leftarrow]
         latex: '''\leftarrow '''
         html: &larr;
     }
     {
-        aliases: ['lArr', 'Leftarrow']
+        aliases: [lArr, Leftarrow]
         latex: '''\Leftarrow '''
         html: &lArr;
     }
     {
-        aliases: [
-            harr
-            lrarr
-            leftrightarrow
-        ]
+        aliases: [harr, lrarr, leftrightarrow]
         latex: '''\leftrightarrow '''
         html: &harr;
     }
     {
-        aliases: [
-            hArr
-            lrArr
-            Leftrightarrow
-        ]
+        aliases: [hArr, lrArr, Leftrightarrow]
         latex: '''\Leftrightarrow '''
         html: &hArr;
     }
     {
-        aliases: ['diamond']
+        aliases: [diamond]
         latex: '''\diamond '''
         html: &#9671;
     }
     {
-        aliases: ['bigtriangleup']
+        aliases: [bigtriangleup]
         latex: '''\bigtriangleup '''
         html: &#9651;
     }
     {
-        aliases: ['ominus']
+        aliases: [ominus]
         latex: '''\ominus '''
         html: &#8854;
     }
     {
-        aliases: ['uplus']
+        aliases: [uplus]
         latex: '''\uplus '''
         html: &#8846;
     }
     {
-        aliases: ['bigtriangledown']
+        aliases: [bigtriangledown]
         latex: '''\bigtriangledown '''
         html: &#9661;
     }
     {
-        aliases: ['sqcap']
+        aliases: [sqcap]
         latex: '''\sqcap '''
         html: &#8851;
     }
     {
-        aliases: ['triangleleft']
+        aliases: [triangleleft]
         latex: '''\triangleleft '''
         html: &#8882;
     }
     {
-        aliases: ['sqcup']
+        aliases: [sqcup]
         latex: '''\sqcup '''
         html: &#8852;
     }
     {
-        aliases: ['triangleright']
+        aliases: [triangleright]
         latex: '''\triangleright '''
         html: &#8883;
     }
     {
-        aliases: ['odot', 'circledot']
+        aliases: [odot, circledot]
         latex: '''\odot '''
         html: &#8857;
     }
     {
-        aliases: ['bigcirc']
+        aliases: [bigcirc]
         latex: '''\bigcirc '''
         html: &#9711;
     }
     {
-        aliases: ['dagger']
+        aliases: [dagger]
         latex: '''\dagger '''
         html: &#0134;
     }
     {
-        aliases: ['ddagger']
+        aliases: [ddagger]
         latex: '''\ddagger '''
         html: &#135;
     }
     {
-        aliases: ['wr']
+        aliases: [wr]
         latex: '''\wr '''
         html: &#8768;
     }
     {
-        aliases: ['amalg']
+        aliases: [amalg]
         latex: '''\amalg '''
         html: &#8720;
     }
     {
-        aliases: ['models']
+        aliases: [models]
         latex: '''\models '''
         html: &#8872;
     }
     {
-        aliases: ['prec']
+        aliases: [prec]
         latex: '''\prec '''
         html: &#8826;
     }
     {
-        aliases: ['succ']
+        aliases: [succ]
         latex: '''\succ '''
         html: &#8827;
     }
     {
-        aliases: ['preceq']
+        aliases: [preceq]
         latex: '''\preceq '''
         html: &#8828;
     }
     {
-        aliases: ['succeq']
+        aliases: [succeq]
         latex: '''\succeq '''
         html: &#8829;
     }
     {
-        aliases: ['simeq']
+        aliases: [simeq]
         latex: '''\simeq '''
         html: &#8771;
     }
     {
-        aliases: ['mid']
+        aliases: [mid]
         latex: '''\mid '''
         html: &#8739;
     }
     {
-        aliases: ['ll']
+        aliases: [ll]
         latex: '''\ll '''
         html: &#8810;
     }
     {
-        aliases: ['gg']
+        aliases: [gg]
         latex: '''\gg '''
         html: &#8811;
     }
     {
-        aliases: ['parallel']
+        aliases: [parallel]
         latex: '''\parallel '''
         html: &#8741;
     }
     {
-        aliases: ['nparallel']
+        aliases: [nparallel]
         latex: '''\nparallel '''
         html: &#8742;
     }
     {
-        aliases: ['bowtie']
+        aliases: [bowtie]
         latex: '''\bowtie '''
         html: &#8904;
     }
     {
-        aliases: ['sqsubset']
+        aliases: [sqsubset]
         latex: '''\sqsubset '''
         html: &#8847;
     }
     {
-        aliases: ['sqsupset']
+        aliases: [sqsupset]
         latex: '''\sqsupset '''
         html: &#8848;
     }
     {
-        aliases: ['smile']
+        aliases: [smile]
         latex: '''\smile '''
         html: &#8995;
     }
     {
-        aliases: ['sqsubseteq']
+        aliases: [sqsubseteq]
         latex: '''\sqsubseteq '''
         html: &#8849;
     }
     {
-        aliases: ['sqsupseteq']
+        aliases: [sqsupseteq]
         latex: '''\sqsupseteq '''
         html: &#8850;
     }
     {
-        aliases: ['doteq']
+        aliases: [doteq]
         latex: '''\doteq '''
         html: &#8784;
     }
     {
-        aliases: ['frown']
+        aliases: [frown]
         latex: '''\frown '''
         html: &#8994;
     }
     {
-        aliases: ['vdash']
+        aliases: [vdash]
         latex: '''\vdash '''
         html: &#8870;
     }
     {
-        aliases: ['dashv']
+        aliases: [dashv]
         latex: '''\dashv '''
         html: &#8867;
     }
     {
-        aliases: ['nless']
+        aliases: [nless]
         latex: '''\nless '''
         html: &#8814;
     }
     {
-        aliases: ['ngtr']
+        aliases: [ngtr]
         latex: '''\ngtr '''
         html: &#8815;
     }
     {
-        aliases: ['ldots']
+        aliases: [ldots]
         latex: '''\ldots '''
         html: &#8230;
     }
     {
-        aliases: ['cdots']
+        aliases: [cdots]
         latex: '''\cdots '''
         html: &#8943;
     }
     {
-        aliases: ['vdots']
+        aliases: [vdots]
         latex: '''\vdots '''
         html: &#8942;
     }
     {
-        aliases: ['ddots']
+        aliases: [ddots]
         latex: '''\ddots '''
         html: &#8945;
     }
     {
-        aliases: ['surd']
+        aliases: [surd]
         latex: '''\surd '''
         html: &#8730;
     }
     {
-        aliases: ['triangle']
+        aliases: [triangle]
         latex: '''\triangle '''
         html: &#9651;
     }
     {
-        aliases: ['ell']
+        aliases: [ell]
         latex: '''\ell '''
         html: &#8467;
     }
     {
-        aliases: ['top']
+        aliases: [top]
         latex: '''\top '''
         html: &#8868;
     }
     {
-        aliases: ['flat']
+        aliases: [flat]
         latex: '''\flat '''
         html: &#9837;
     }
     {
-        aliases: ['natural']
+        aliases: [natural]
         latex: '''\natural '''
         html: &#9838;
     }
     {
-        aliases: ['sharp']
+        aliases: [sharp]
         latex: '''\sharp '''
         html: &#9839;
     }
     {
-        aliases: ['wp']
+        aliases: [wp]
         latex: '''\wp '''
         html: &#8472;
     }
     {
-        aliases: ['bot']
+        aliases: [bot]
         latex: '''\bot '''
         html: &#8869;
     }
     {
-        aliases: ['clubsuit']
+        aliases: [clubsuit]
         latex: '''\clubsuit '''
         html: &clubs;
     }
     {
-        aliases: ['diamondsuit']
+        aliases: [diamondsuit]
         latex: '''\diamondsuit '''
         html: &#9826;
     }
     {
-        aliases: ['heartsuit']
+        aliases: [heartsuit]
         latex: '''\heartsuit '''
         html: &#9825;
     }
     {
-        aliases: ['spadesuit']
+        aliases: [spadesuit]
         latex: '''\spadesuit '''
         html: &#9824;
     }
     {
-        aliases: ['parallelogram']
+        aliases: [parallelogram]
         latex: '''\parallelogram '''
         html: &#9649;
     }
     {
-        aliases: ['square']
+        aliases: [square]
         latex: '''\square '''
         html: &#11036;
     }
     {
-        aliases: ['oint']
+        aliases: [oint]
         latex: '''\oint '''
         html: &#8750;
     }
     {
-        aliases: ['bigcap']
+        aliases: [bigcap]
         latex: '''\bigcap '''
         html: &#8745;
     }
     {
-        aliases: ['bigcup']
+        aliases: [bigcup]
         latex: '''\bigcup '''
         html: &#8746;
     }
     {
-        aliases: ['bigsqcup']
+        aliases: [bigsqcup]
         latex: '''\bigsqcup '''
         html: &#8852;
     }
     {
-        aliases: ['bigvee']
+        aliases: [bigvee]
         latex: '''\bigvee '''
         html: &#8744;
     }
     {
-        aliases: ['bigwedge']
+        aliases: [bigwedge]
         latex: '''\bigwedge '''
         html: &#8743;
     }
     {
-        aliases: ['bigodot']
+        aliases: [bigodot]
         latex: '''\bigodot '''
         html: &#8857;
     }
     {
-        aliases: ['bigotimes']
+        aliases: [bigotimes]
         latex: '''\bigotimes '''
         html: &#8855;
     }
     {
-        aliases: ['bigoplus']
+        aliases: [bigoplus]
         latex: '''\bigoplus '''
         html: &#8853;
     }
     {
-        aliases: ['biguplus']
+        aliases: [biguplus]
         latex: '''\biguplus '''
         html: &#8846;
     }
     {
-        aliases: ['lfloor']
+        aliases: [lfloor]
         latex: '''\lfloor '''
         html: &#8970;
     }
     {
-        aliases: ['rfloor']
+        aliases: [rfloor]
         latex: '''\rfloor '''
         html: &#8971;
     }
     {
-        aliases: ['lceil']
+        aliases: [lceil]
         latex: '''\lceil '''
         html: &#8968;
     }
     {
-        aliases: ['rceil']
+        aliases: [rceil]
         latex: '''\rceil '''
         html: &#8969;
     }
     {
-        aliases: ['opencurlybrace', 'lbrace']
+        aliases: [opencurlybrace, lbrace]
         latex: '''\lbrace '''
         html: '{'
     }
     {
-        aliases: ['closecurlybrace', 'rbrace']
+        aliases: [closecurlybrace, rbrace]
         latex: '''\rbrace '''
         html: '}'
     }
     {
-        aliases: ['lbrack']
+        aliases: [lbrack]
         latex: '['
         html: '['
     }
     {
-        aliases: ['rbrack']
+        aliases: [rbrack]
         latex: ']'
         html: ']'
     }
     {
-        aliases: ['slash']
+        aliases: [slash]
         latex: /
         html: /
     }
     {
-        aliases: ['vert']
+        aliases: [vert]
         latex: |
         html: |
     }
     {
-        aliases: ['perp', 'perpendicular']
+        aliases: [perp, perpendicular]
         latex: '''\perp '''
         html: &perp;
     }
     {
-        aliases: ['nabla', 'del']
+        aliases: [nabla, del]
         latex: '''\nabla '''
         html: &nabla;
     }
     {
-        aliases: ['hbar']
+        aliases: [hbar]
         latex: '''\hbar '''
         html: &#8463;
     }
     {
-        aliases: ['AA', 'Angstrom', 'angstrom']
+        aliases: [AA, Angstrom, angstrom]
         latex: '''\text\AA '''
         html: &#8491;
     }
     {
-        aliases: ['ring', 'circ', 'circle']
+        aliases: [ring, circ, circle]
         latex: '''\circ '''
         html: &#8728;
     }
     {
-        aliases: ['bull', 'bullet']
+        aliases: [bull, bullet]
         latex: '''\bullet '''
         html: &bull;
     }
     {
-        aliases: ['setminus', 'smallsetminus']
+        aliases: [setminus, smallsetminus]
         latex: '''\setminus '''
         html: &#8726;
     }
     {
-        aliases: ['not', '¬', 'neg']
+        aliases: [not, ¬, neg]
         latex: '''\neg '''
         html: &not;
     }
@@ -855,7 +832,7 @@ vanillaSymbols: [
         html: &hellip;
     }
     {
-        aliases: ['Re', 'Real', 'real']
+        aliases: [Re, Real, real]
         latex: '''\Re '''
         html: &real;
     }
@@ -872,62 +849,52 @@ vanillaSymbols: [
         html: &image;
     }
     {
-        aliases: ['part', 'partial']
+        aliases: [part, partial]
         latex: '''\partial '''
         html: &part;
     }
     {
-        aliases: ['pounds']
+        aliases: [pounds]
         latex: '''\pounds '''
         html: &pound;
     }
     {
-        aliases: [
-            alef
-            alefsym
-            aleph
-            alephsym
-        ]
+        aliases: [alef, alefsym, aleph, alephsym]
         latex: '''\aleph '''
         html: &alefsym;
     }
     {
-        aliases: [
-            xist
-            xists
-            exist
-            exists
-        ]
+        aliases: [xist, xists, exist, exists]
         latex: '''\exists '''
         html: &exist;
     }
     {
-        aliases: ['nexists', 'nexist']
+        aliases: [nexists, nexist]
         latex: '''\nexists '''
         html: &#8708;
     }
     {
-        aliases: ['deg', 'degree']
+        aliases: [deg, degree]
         latex: '''\degree '''
         html: &deg;
     }
     {
-        aliases: ['ang', 'angle']
+        aliases: [ang, angle]
         latex: '''\angle '''
         html: &ang;
     }
     {
-        aliases: ['measuredangle']
+        aliases: [measuredangle]
         latex: '''\measuredangle '''
         html: &#8737;
     }
     {
-        aliases: ['quad', 'emsp']
+        aliases: [quad, emsp]
         latex: '''\quad '''
         html: '    '
     }
     {
-        aliases: ['qquad']
+        aliases: [qquad]
         latex: '''\qquad '''
         html: '        '
     }

@@ -12,6 +12,7 @@ import { applyConfig, createOptions } from '../options'
 import type {
     BaseMathQuillApi,
     Config,
+    CursorPosition,
     EmbedOptions,
     InnerFields,
     InnerMathFieldApi,
@@ -209,6 +210,15 @@ export abstract class EditableField extends AbstractMathQuill implements MathFie
 
     ignoreNextMousedown(fn: (e: MouseEvent) => boolean): this {
         this.controller.options.ignoreNextMousedown = fn
+        return this
+    }
+
+    cursorPosition(): CursorPosition {
+        return this.controller.positions.get()
+    }
+
+    setCursorPosition(position: CursorPosition): this {
+        this.controller.positions.set(position)
         return this
     }
 }

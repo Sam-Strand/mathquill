@@ -780,3 +780,10 @@ html body .mq-editable-field .mq-selection .mq-nthroot-container * {
 .mq-bracket-container:has(br) {
     vertical-align: middle;
 }
+
+// Выделение перетаскивается мышью: над ним и во время переноса — обычная стрелка
+.mq-editable-field .mq-selection,
+.mq-editable-field.mq-dragging,
+.mq-editable-field.mq-dragging * {
+    cursor: default;
+}

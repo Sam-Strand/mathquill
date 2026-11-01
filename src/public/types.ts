@@ -98,6 +98,16 @@ export interface InnerFields extends Array<InnerMathFieldApi> {
     [name: string]: unknown
 }
 
+/**
+ * Cursor (and selection) position as plain data. Each point is a path: child
+ * indices from the root to the block, then the offset within the block.
+ */
+export interface CursorPosition {
+    cursor: number[]
+    /** The fixed end of the selection, if any. */
+    anchor?: number[]
+}
+
 export interface MathFieldApi extends BaseMathQuillApi {
     focus(): this
     blur(): this
@@ -118,6 +128,10 @@ export interface MathFieldApi extends BaseMathQuillApi {
     dropEmbedded(pageX: number, pageY: number, options: EmbedOptions): this
     clickAt(clientX: number, clientY: number, target?: HTMLElement): this
     ignoreNextMousedown(fn: (e: MouseEvent) => boolean): this
+    /** Where the cursor and selection are, e.g. to restore them after `latex(...)`. */
+    cursorPosition(): CursorPosition
+    /** Put the cursor (and selection) back; positions that no longer exist put it at the end. */
+    setCursorPosition(position: CursorPosition): this
 }
 
 export interface InnerMathFieldApi extends MathFieldApi {

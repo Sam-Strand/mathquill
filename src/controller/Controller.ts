@@ -10,6 +10,7 @@
  *   focusBlur  – focus state and listeners
  *   mouse      – click and drag-to-select
  *   scroller   – horizontal scrolling of overflowing fields
+ *   positions  – cursor position as plain data (survives re-rendering)
  *
  * Every tree change goes through `notify(event)`, which keeps cursor,
  * selection and the services consistent (see `notify`).
@@ -28,6 +29,7 @@ import { Textarea } from './Textarea'
 import { FocusBlur } from './FocusBlur'
 import { Mouse } from './Mouse'
 import { Scroller } from './Scroller'
+import { CursorPositions } from './CursorPosition'
 
 /**
  * What changed, for `notify`:
@@ -57,6 +59,7 @@ export class Controller {
     readonly focusBlur: FocusBlur
     readonly mouse: Mouse
     readonly scroller: Scroller
+    readonly positions: CursorPositions
 
     /** While muted, handlers are not called (used while rendering the initial content). */
     private muted = false
@@ -77,6 +80,7 @@ export class Controller {
         this.focusBlur = new FocusBlur(this)
         this.mouse = new Mouse(this)
         this.scroller = new Scroller(this)
+        this.positions = new CursorPositions(this)
     }
 
     // ---- lifecycle ---------------------------------------------------------

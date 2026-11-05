@@ -6,7 +6,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import MathQuillEditor from '@mathquill/vue'
+import MathQuillEditor from '../../src/vue'
 
 const formula = ref('x = \\frac{ -b \\pm \\sqrt{b^2-4ac} }{ 2a }')
 </script>

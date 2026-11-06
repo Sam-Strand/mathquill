@@ -36,6 +36,7 @@
     "typescript": "^7.0.2",
     "vite": "^8.3.5",
     "mkon": "workspace:*",
+    "vite-lib-preset": "workspace:*",
     "vite-plugin-dts": "^5.1.2"
   },
   "peerDependencies": {

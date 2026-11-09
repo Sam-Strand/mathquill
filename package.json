@@ -35,7 +35,7 @@
     "mkon": "workspace:*",
     "sass": "^1.108.1",
     "typescript": "^7.0.2",
-    "vite": "^8.3.6",
+    "vite": "^8.3.7",
     "vite-plugin-dts": "^5.1.2",
     "vite-preset": "workspace:*"
   },

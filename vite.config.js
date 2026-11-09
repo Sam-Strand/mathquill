@@ -1,7 +1,7 @@
-import { vueLib } from 'vite-lib-preset'
+import configVue from 'vite-preset/vue'
 import mkon from 'mkon/vite-plugin-mkon'
 
-export default vueLib({
+export default configVue({
     entry: {
         index: 'src/index.ts',
         vue: 'src/vue/index.ts'

@@ -31,15 +31,15 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.10",
-    "@vue/language-core": "^3.3.13",
-    "sass": "^1.106.1",
-    "typescript": "^7.0.2",
-    "vite": "^8.3.5",
+    "@vue/language-core": "^3.3.14",
     "mkon": "workspace:*",
-    "vite-lib-preset": "workspace:*",
-    "vite-plugin-dts": "^5.1.2"
+    "sass": "^1.108.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.6",
+    "vite-plugin-dts": "^5.1.2",
+    "vite-preset": "workspace:*"
   },
   "peerDependencies": {
-    "vue": "^3.5.44"
+    "vue": "^3.5.45"
   }
 }
